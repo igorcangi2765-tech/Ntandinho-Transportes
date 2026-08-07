@@ -58,8 +58,11 @@ export class AuthService {
    * Serviço principal de Login com verificação de credenciais e criação de sessão na base de dados
    */
   static async login(email: string, password: string, ipAddress?: string, userAgent?: string) {
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
+
+    const user = await prisma.user.findFirst({
+      where: { email: cleanEmail },
       include: {
         role: {
           include: {
@@ -79,7 +82,7 @@ export class AuthService {
       throw new Error('Conta desativada ou inativa.');
     }
 
-    const isValidPassword = await this.comparePassword(password, user.password);
+    const isValidPassword = await this.comparePassword(cleanPassword, user.password);
     if (!isValidPassword) {
       throw new Error('Credenciais de acesso inválidas.');
     }

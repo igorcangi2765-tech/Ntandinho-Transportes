@@ -19,6 +19,17 @@ adminRouter.get('/health', requireAuth, requireRole(['ADMIN', 'GERENTE_FROTA']),
 /**
  * Endpoint de Login no ERP
  */
+adminRouter.all('/auth/login', (req: AuthenticatedRequest, res: Response, next) => {
+  if (req.method === 'POST') return next();
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  return res.status(405).json({
+    success: false,
+    endpoint: '/api/admin/auth/login',
+    error: `O método ${req.method} não é permitido. Utilize POST.`,
+    failureReason: 'Este endpoint aceita apenas requisições HTTP POST.',
+  });
+});
+
 adminRouter.post('/auth/login', async (req: AuthenticatedRequest, res: Response) => {
   const ipAddress = (req.ip || req.socket.remoteAddress || '127.0.0.1').toString();
   const userAgent = (req.headers['user-agent'] || 'Unknown').toString();

@@ -39,6 +39,28 @@ app.use('/api/admin/crm', crm_routes_1.default);
 app.use('/api/admin/fleet', fleet_routes_1.default);
 app.use('/api/admin/finance', finance_routes_1.default);
 app.use('/api/admin/analytics', analytics_routes_1.default);
+// 3. Fallback de 404 Exclusivo para a API - NUNCA RETORNAR HTML PARA NENHUM ENDPOINT /api/*
+app.use('/api/*', (req, res) => {
+    return res.status(404).json({
+        success: false,
+        endpoint: req.originalUrl,
+        error: `Endpoint '${req.originalUrl}' não encontrado na API Node.js.`,
+        failureReason: `A rota '${req.method} ${req.originalUrl}' não está registada no servidor backend.`,
+    });
+});
+// Manipulador Global de Erros da API (Sempre Retorna JSON para /api/*)
+app.use((err, req, res, next) => {
+    console.error(`[EXPRESS ERROR]`, err);
+    if (req.originalUrl && req.originalUrl.startsWith('/api')) {
+        return res.status(500).json({
+            success: false,
+            endpoint: req.originalUrl,
+            error: 'Erro interno no servidor API.',
+            details: err.message || 'Ocorreu um erro inesperado no backend.',
+        });
+    }
+    next(err);
+});
 // SERVIÇO DE FICHEIROS DE UPLOADS
 const uploadsPath = path_1.default.resolve(__dirname, '../../uploads');
 app.use('/uploads', express_1.default.static(uploadsPath));

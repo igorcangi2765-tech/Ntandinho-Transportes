@@ -40,6 +40,30 @@ app.use('/api/admin/fleet', fleetRoutes);
 app.use('/api/admin/finance', financeRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
 
+// 3. Fallback de 404 Exclusivo para a API - NUNCA RETORNAR HTML PARA NENHUM ENDPOINT /api/*
+app.use('/api/*', (req: Request, res: Response) => {
+  return res.status(404).json({
+    success: false,
+    endpoint: req.originalUrl,
+    error: `Endpoint '${req.originalUrl}' não encontrado na API Node.js.`,
+    failureReason: `A rota '${req.method} ${req.originalUrl}' não está registada no servidor backend.`,
+  });
+});
+
+// Manipulador Global de Erros da API (Sempre Retorna JSON para /api/*)
+app.use((err: any, req: Request, res: Response, next: any) => {
+  console.error(`[EXPRESS ERROR]`, err);
+  if (req.originalUrl && req.originalUrl.startsWith('/api')) {
+    return res.status(500).json({
+      success: false,
+      endpoint: req.originalUrl,
+      error: 'Erro interno no servidor API.',
+      details: err.message || 'Ocorreu um erro inesperado no backend.',
+    });
+  }
+  next(err);
+});
+
 // SERVIÇO DE FICHEIROS DE UPLOADS
 const uploadsPath = path.resolve(__dirname, '../../uploads');
 app.use('/uploads', express.static(uploadsPath));

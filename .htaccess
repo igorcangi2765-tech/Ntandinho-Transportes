@@ -11,20 +11,29 @@
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # 2. Ignorar ficheiros reais (imagens, css, js, etc)
-  RewriteCond %{REQUEST_FILENAME} -f
+  # 2. ISOLAR A API NODE.JS (/api e /api/*) - NUNCA REDIRECIONAR PARA INDEX.HTML DO REACT!
+  RewriteCond %{REQUEST_URI} ^/api [NC]
   RewriteRule ^ - [L]
 
-  # 3. Roteamento do Painel Admin ERP (/admin e /admin/*) para /admin/index.html
-  RewriteRule ^admin(/.*)?$ /admin/index.html [L]
-
-  # 4. Ignorar outros diretórios existentes
+  # 3. Ignorar ficheiros e diretórios reais existentes (imagens, css, js, uploads)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
+
+  # 4. Roteamento do Painel Admin ERP (/admin e /admin/*) para /admin/index.html
+  RewriteRule ^admin(/.*)?$ /admin/index.html [L]
 
   # 5. Fallback do Site Público para index.html
   RewriteRule ^index\.html$ - [L]
   RewriteRule . /index.html [L]
+</IfModule>
+
+# Reverse Proxy para a API Node.js na porta 5000 (caso mod_proxy esteja habilitado no Apache/Hostinger)
+<IfModule mod_proxy.c>
+  <IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^api/(.*)$ http://127.0.0.1:5000/api/$1 [P,L]
+  </IfModule>
 </IfModule>
 
 # ====================================================================

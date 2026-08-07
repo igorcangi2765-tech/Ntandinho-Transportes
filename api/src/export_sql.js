@@ -1,10 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
+const { seedDatabase } = require('../dist/seed');
 
 const prisma = new PrismaClient();
 
-async function generateCleanDump() {
+async function generateCompleteDump() {
+  // 1. Garantir que a base de dados local tem os dados semeados antes do export
+  console.log('🌱 A semear dados locais para garantir exportação completa...');
+  await seedDatabase();
+
   const schemaSqlPath = path.join(__dirname, '../prisma/schema.sql');
   let schemaSql = fs.readFileSync(schemaSqlPath, 'utf8');
 
@@ -132,7 +137,7 @@ async function generateCleanDump() {
 
   const outputPath = path.join(__dirname, '../ntandinho_hostinger_database.sql');
   fs.writeFileSync(outputPath, sql, 'utf8');
-  console.log(`✅ Ficheiro SQL limpo criado sem comentários em: ${outputPath}`);
+  console.log(`✅ Ficheiro SQL COMPLETO (Tabelas + Dados) criado com sucesso em: ${outputPath}`);
 }
 
-generateCleanDump().catch(console.error).finally(() => prisma.$disconnect());
+generateCompleteDump().catch(console.error).finally(() => prisma.$disconnect());

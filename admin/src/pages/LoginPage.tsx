@@ -62,40 +62,22 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      let data;
-      try {
-        data = await authService.login(cleanEmail, cleanPassword);
-      } catch (err: any) {
-        // Fallback imediato para o utilizador Administrador se a API/BD estiver indisponível no hosting
-        if (cleanEmail === 'admin@ntandinho.co.mz' || cleanPassword === 'Admin2026!' || cleanEmail.includes('admin')) {
-          data = {
-            success: true,
-            user: {
-              id: 'usr-admin-1',
-              name: 'Administrador N\' Tandinho',
-              email: cleanEmail || 'admin@ntandinho.co.mz',
-              role: 'ADMIN' as const,
-              company: "N' Tandinho Transportes S.A.",
-            },
-            tokens: {
-              accessToken: 'demo_token_ntandinho_2026',
-              refreshToken: 'demo_refresh_token_2026',
-            },
-          };
-        } else {
-          throw err;
-        }
-      }
+      const data = await authService.login(cleanEmail, cleanPassword);
 
       if (data && data.user && data.tokens) {
         login(data.user, data.tokens.accessToken);
         addToast('Acesso Concedido', `Bem-vindo de volta, ${data.user.name}!`, 'success');
-        navigate('/');
+        console.log('[LOGIN PAGE] Autenticação bem-sucedida. Redirecionando para /admin/dashboard...');
+        navigate('/dashboard');
       } else {
-        throw new Error('Credenciais de acesso inválidas.');
+        const failureMsg = 'Credenciais de acesso incorretas. Por favor verifique o seu e-mail e palavra-passe.';
+        console.error('[LOGIN PAGE FAIL]', failureMsg);
+        throw new Error(failureMsg);
       }
     } catch (err: any) {
-      setServerError(err.message || 'Credenciais de acesso inválidas.');
+      const errorMsg = err.message || 'Falha ao autenticar. Verifique os dados introduzidos.';
+      console.error('[LOGIN PAGE ERROR]', errorMsg);
+      setServerError(errorMsg);
     } finally {
       setLoading(false);
     }

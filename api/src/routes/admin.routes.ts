@@ -20,19 +20,40 @@ adminRouter.get('/health', requireAuth, requireRole(['ADMIN', 'GERENTE_FROTA']),
  * Endpoint de Login no ERP
  */
 adminRouter.post('/auth/login', async (req: AuthenticatedRequest, res: Response) => {
+  const ipAddress = (req.ip || req.socket.remoteAddress || '127.0.0.1').toString();
+  const userAgent = (req.headers['user-agent'] || 'Unknown').toString();
+  const { email, password } = req.body || {};
+
+  console.log(`[API REQUEST] POST /api/admin/auth/login | Target Email: '${email}' | IP: ${ipAddress}`);
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      endpoint: '/api/admin/auth/login',
+      error: 'Por favor forneça e-mail e palavra-passe.',
+      userFound: false,
+      passwordValid: false,
+      sessionCreated: false,
+      tokenCreated: false,
+      failureReason: 'Campos de e-mail ou palavra-passe ausentes no corpo da requisição.',
+    });
+  }
+
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Por favor forneça email e palavra-passe.' });
-    }
-
-    const ipAddress = req.ip || req.socket.remoteAddress;
-    const userAgent = req.headers['user-agent'];
-
     const result = await AuthService.login(email, password, ipAddress, userAgent);
-    return res.json({ success: true, ...result });
+    return res.json({
+      success: true,
+      endpoint: '/api/admin/auth/login',
+      ...result,
+    });
   } catch (err: any) {
-    return res.status(401).json({ error: err.message || 'Falha na autenticação.' });
+    console.error(`[API LOGIN ERROR] POST /api/admin/auth/login falhou:`, err.message);
+    return res.status(401).json({
+      success: false,
+      endpoint: '/api/admin/auth/login',
+      error: err.message || 'Falha na autenticação.',
+      failureReason: err.message || 'Credenciais de acesso incorretas ou utilizador inexistente.',
+    });
   }
 });
 

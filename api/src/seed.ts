@@ -42,21 +42,42 @@ export async function seedDatabase() {
     }
 
     const adminEmail = 'admin@ntandinho.co.mz';
+    const defaultPassword = 'Admin2026!';
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
     const existingAdmin = await prisma.user.findUnique({
       where: { email: adminEmail },
     });
 
     if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash('Admin2026!', 10);
       await prisma.user.create({
         data: {
           email: adminEmail,
           password: hashedPassword,
-          name: "Administrador N' Tandinho",
+          name: 'Administrador',
           roleId: adminRole.id,
           isActive: true,
+          deletedAt: null,
         },
       });
+      console.log('✅ Utilizador Administrador criado com sucesso: admin@ntandinho.co.mz');
+    } else {
+      const isPasswordValid = await bcrypt.compare(defaultPassword, existingAdmin.password);
+      if (!isPasswordValid || !existingAdmin.isActive || existingAdmin.deletedAt) {
+        await prisma.user.update({
+          where: { id: existingAdmin.id },
+          data: {
+            password: hashedPassword,
+            name: 'Administrador',
+            roleId: adminRole.id,
+            isActive: true,
+            deletedAt: null,
+          },
+        });
+        console.log('🔄 Utilizador Administrador corrigido e atualizado com palavra-passe válida.');
+      } else {
+        console.log('✔ Utilizador Administrador validado com sucesso.');
+      }
     }
 
     // 2. Empresas & Clientes Corporativos

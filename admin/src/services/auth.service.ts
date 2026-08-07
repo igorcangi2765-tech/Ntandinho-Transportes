@@ -22,30 +22,7 @@ export const authService = {
       });
       return response;
     } catch (err: any) {
-      console.warn('Backend API login offline or error, applying resilient ERP fallback...', err);
-
-      // Fallback resiliente para garantir acesso ao ERP em produção se a API ou BD estiver indisponível
-      if (
-        cleanEmail === 'admin@ntandinho.co.mz' ||
-        cleanEmail.includes('admin') ||
-        cleanPassword === 'Admin2026!'
-      ) {
-        return {
-          success: true,
-          user: {
-            id: 'usr-admin-1',
-            name: 'Administrador N\' Tandinho',
-            email: cleanEmail || 'admin@ntandinho.co.mz',
-            role: 'ADMIN',
-            company: "N' Tandinho Transportes S.A.",
-          },
-          tokens: {
-            accessToken: 'demo_token_ntandinho_2026',
-            refreshToken: 'demo_refresh_token_2026',
-          },
-        };
-      }
-
+      console.error('[AUTH CLIENT] Erro retornado pela API de login:', err.message || err);
       throw err;
     }
   },

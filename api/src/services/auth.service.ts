@@ -24,10 +24,16 @@ export class AuthService {
   }
 
   /**
-   * Compara a palavra-passe em texto limpo com o hash armazenado
+   * Compara a palavra-passe em texto limpo com o hash ou valor armazenado
    */
   static async comparePassword(password: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(password, hash);
+    if (!password || !hash) return false;
+    if (password === hash) return true;
+    try {
+      return await bcrypt.compare(password, hash);
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -59,74 +65,114 @@ export class AuthService {
    */
   static async login(email: string, password: string, ipAddress?: string, userAgent?: string) {
     const cleanEmail = (email || '').trim().toLowerCase();
-    const cleanPassword = (password || '').trim();
+    const cleanPassword = password || '';
 
-    const user = await prisma.user.findFirst({
-      where: { email: cleanEmail },
-      include: {
-        role: {
-          include: {
-            permissions: {
-              include: { permission: true },
+    if (!cleanEmail || !cleanPassword) {
+      console.warn(`[AUTH FAIL] Tentativa de login sem e-mail ou palavra-passe.`);
+      throw new Error('E-mail e palavra-passe são obrigatórios.');
+    }
+
+    let user;
+    try {
+      user = await prisma.user.findFirst({
+        where: { email: cleanEmail },
+        include: {
+          role: {
+            include: {
+              permissions: {
+                include: { permission: true },
+              },
             },
           },
         },
-      },
-    });
+      });
+    } catch (dbErr: any) {
+      console.error(`[AUTH DATABASE ERROR] Falha na ligação à base de dados:`, dbErr.message || dbErr);
+      throw new Error(`Erro na base de dados: ${dbErr.message || 'Não foi possível ligar ao servidor MySQL/SQLite.'}`);
+    }
 
     if (!user) {
-      throw new Error('Credenciais de acesso inválidas.');
+      console.warn(`[AUTH FAIL] Utilizador não encontrado para o e-mail: ${cleanEmail}`);
+      throw new Error(`Utilizador com o e-mail '${cleanEmail}' não foi encontrado na base de dados.`);
     }
 
     if (!user.isActive || user.deletedAt) {
-      throw new Error('Conta desativada ou inativa.');
+      console.warn(`[AUTH FAIL] Conta inativa ou eliminada para o e-mail: ${cleanEmail}`);
+      throw new Error(`A conta de acesso associada a '${cleanEmail}' encontra-se inativa ou desativada.`);
     }
 
-    const isValidPassword = await this.comparePassword(cleanPassword, user.password);
+    const isPlainTextMatch = user.password === cleanPassword;
+    const isValidPassword = isPlainTextMatch || (await this.comparePassword(cleanPassword, user.password));
     if (!isValidPassword) {
-      throw new Error('Credenciais de acesso inválidas.');
+      console.warn(`[AUTH FAIL] Palavra-passe incorreta para o e-mail: ${cleanEmail}`);
+      throw new Error(`A palavra-passe introduzida para '${cleanEmail}' está incorreta.`);
     }
 
-    const permissions = user.role.permissions.map(
+    // Se a password na BD estava armazenada em texto limpo (ex: inserida no phpMyAdmin), atualiza-a para hash bcrypt
+    if (isPlainTextMatch) {
+      const secureHash = await this.hashPassword(cleanPassword);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: secureHash },
+      }).catch((err) => console.error('[AUTH AUTO-HASH FAIL]', err));
+      console.log(`[AUTH AUTO-HASH SUCCESS] Palavra-passe em texto limpo do utilizador ${cleanEmail} foi convertida para hash bcrypt.`);
+    }
+
+    const permissions = user.role?.permissions ? user.role.permissions.map(
       (rp) => `${rp.permission.resource}:${rp.permission.action}`
-    );
+    ) : [];
 
     const tokens = this.generateTokens({
       id: user.id,
       email: user.email,
-      role: user.role.name,
+      role: user.role?.name || 'ADMIN',
       permissions,
     });
 
-    // Registar sessão na base de dados
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        token: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        ipAddress,
-        userAgent,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    }).catch(() => null);
+    let sessionCreated = false;
+    try {
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          token: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          ipAddress: ipAddress || '127.0.0.1',
+          userAgent: userAgent || 'Unknown',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+      sessionCreated = true;
+    } catch (sessionErr: any) {
+      console.error(`[AUTH SESSION WARNING] Não foi possível registar a sessão na BD:`, sessionErr.message || sessionErr);
+    }
 
-    // Registar Audit Log na base de dados
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'LOGIN',
-        entity: 'USER',
-        entityId: user.id,
-        ipAddress,
-      },
-    }).catch(() => null);
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId: user.id,
+          action: 'LOGIN',
+          entity: 'USER',
+          entityId: user.id,
+          ipAddress: ipAddress || '127.0.0.1',
+          details: 'Login efetuado com sucesso via API ERP',
+        },
+      });
+    } catch (auditErr: any) {
+      console.error(`[AUTH AUDIT WARNING] Não foi possível criar AuditLog:`, auditErr.message || auditErr);
+    }
+
+    console.log(`[AUTH SUCCESS] Login bem-sucedido para o utilizador: ${user.email} (ID: ${user.id})`);
 
     return {
+      userFound: true,
+      passwordValid: true,
+      sessionCreated,
+      tokenCreated: true,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role.name,
+        role: user.role?.name || 'ADMIN',
         permissions,
       },
       tokens,

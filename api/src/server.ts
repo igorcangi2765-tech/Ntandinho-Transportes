@@ -17,10 +17,16 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares de Segurança e Logging
+// Middlewares de Segurança, CORS e Logging
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+}));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // ROTAS DA API

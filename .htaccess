@@ -11,15 +11,18 @@
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # 2. Ignorar ficheiros e diretórios existentes
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  # 2. Ignorar ficheiros reais (imagens, css, js, etc)
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+
+  # 3. Roteamento do Painel Admin ERP (/admin e /admin/*) para /admin/index.html
+  RewriteRule ^admin(/.*)?$ /admin/index.html [L]
+
+  # 4. Ignorar outros diretórios existentes
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # 3. Encaminhamento para o Painel Admin ERP (/admin/*)
-  RewriteRule ^admin(/.*)?$ /admin/index.html [L]
-
-  # 4. Fallback do Site Público para index.html
+  # 5. Fallback do Site Público para index.html
   RewriteRule ^index\.html$ - [L]
   RewriteRule . /index.html [L]
 </IfModule>

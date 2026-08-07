@@ -1,0 +1,45 @@
+# ====================================================================
+# CONFIGURAÇÃO DE REWRITE E SEGURANÇA PARA HOSTINGER
+# Website N' Tandinho Transportes S.A. + Painel ERP Admin
+# ====================================================================
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Redirecionar HTTP para HTTPS (Hostinger SSL)
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 2. Ignorar ficheiros e diretórios existentes
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3. Encaminhamento para o Painel Admin ERP (/admin/*)
+  RewriteRule ^admin(/.*)?$ /admin/index.html [L]
+
+  # 4. Fallback do Site Público para index.html
+  RewriteRule ^index\.html$ - [L]
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# ====================================================================
+# CABEÇALHOS DE SEGURANÇA E CACHING
+# ====================================================================
+<IfModule mod_headers.c>
+  # Prevenção de Clickjacking e Sniffing de MIME
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Caching de Ficheiros Estáticos
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Não armazenar em cache as páginas HTML para garantir atualizações imediatas
+  <FilesMatch "\.(html)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>

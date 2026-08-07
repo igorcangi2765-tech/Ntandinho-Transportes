@@ -1,0 +1,433 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id          String     @id @default(uuid())
+  email       String     @unique
+  password    String
+  name        String
+  phone       String?
+  roleId      String
+  role        Role       @relation(fields: [roleId], references: [id])
+  isActive    Boolean    @default(true)
+  deletedAt   DateTime?  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  sessions    Session[]
+  auditLogs   AuditLog[]
+  quotations  Quotation[] @relation("CreatedQuotations")
+
+  @@map("users")
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  isSystem    Boolean          @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  action      String
+  resource    String
+  description String?
+  createdAt   DateTime         @default(now())
+
+  roles       RolePermission[]
+
+  @@unique([action, resource])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  refreshToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  revoked      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@map("sessions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// =====================================
+// CRM MODELS
+// =====================================
+
+model Company {
+  id          String     @id @default(uuid())
+  name        String
+  nuit        String     @unique
+  email       String
+  phone       String
+  address     String?
+  city        String?
+  country     String     @default("Moçambique")
+  creditLimit Float      @default(0.0)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  customers   Customer[]
+  contacts    Contact[]
+  quotations  Quotation[]
+  contracts   Contract[]
+  invoices    Invoice[]
+
+  @@map("companies")
+}
+
+model Customer {
+  id          String     @id @default(uuid())
+  companyId   String?
+  company     Company?   @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  name        String
+  email       String
+  phone       String
+  nuit        String?
+  isCorporate Boolean    @default(true)
+  status      String     @default("ATIVO")
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  leads       Lead[]
+  quotations  Quotation[]
+  contracts   Contract[]
+  invoices    Invoice[]
+  payments    Payment[]
+
+  @@map("customers")
+}
+
+model Contact {
+  id          String   @id @default(uuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  position    String?
+  email       String
+  phone       String
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("contacts")
+}
+
+model Lead {
+  id              String   @id @default(uuid())
+  name            String
+  companyName     String?
+  email           String
+  phone           String
+  origin          String
+  destination     String
+  cargoType       String
+  estimatedWeight Float?
+  status          String   @default("NOVO")
+  customerId      String?
+  customer        Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  quotations      Quotation[]
+
+  @@map("leads")
+}
+
+model Quotation {
+  id               String    @id @default(uuid())
+  quotationNumber  String    @unique
+  customerId       String
+  customer         Customer  @relation(fields: [customerId], references: [id])
+  companyId        String?
+  company          Company?  @relation(fields: [companyId], references: [id])
+  leadId           String?
+  lead             Lead?     @relation(fields: [leadId], references: [id])
+  origin           String
+  destination      String
+  cargoDescription String
+  weightKg         Float
+  containerSize    String?
+  priceSubtotal    Float
+  taxAmount        Float
+  totalPrice       Float
+  currency         String    @default("MZN")
+  validUntil       DateTime
+  status           String    @default("RASCUNHO")
+  createdById      String?
+  createdBy        User?     @relation("CreatedQuotations", fields: [createdById], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  contracts        Contract[]
+
+  @@map("quotations")
+}
+
+model Contract {
+  id             String    @id @default(uuid())
+  contractNumber String    @unique
+  quotationId    String
+  quotation      Quotation @relation(fields: [quotationId], references: [id])
+  customerId     String
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  companyId      String?
+  company        Company?  @relation(fields: [companyId], references: [id])
+  startDate      DateTime
+  endDate        DateTime
+  totalAmount    Float
+  status         String    @default("ATIVO")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  trips          Trip[]
+
+  @@map("contracts")
+}
+
+// =====================================
+// FLEET & OPERATIONS MODELS
+// =====================================
+
+model Vehicle {
+  id            String    @id @default(uuid())
+  plateNumber   String    @unique
+  make          String
+  model         String
+  year          Int
+  status        String    @default("OPERACIONAL")
+  mileageKm     Float     @default(0.0)
+  nextServiceKm Float?
+  licenseExpiry DateTime?
+  isAvailable   Boolean   @default(true)
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  trips         Trip[]
+  maintenances  Maintenance[]
+  expenses      Expense[]
+
+  @@map("vehicles")
+}
+
+model Driver {
+  id            String    @id @default(uuid())
+  name          String
+  licenseNumber String    @unique
+  phone         String
+  status        String    @default("DISPONIVEL")
+  isAvailable   Boolean   @default(true)
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  trips         Trip[]
+
+  @@map("drivers")
+}
+
+model Route {
+  id                 String   @id @default(uuid())
+  name               String
+  origin             String
+  destination        String
+  distanceKm         Float
+  estDurationHours   Float
+  borderCheckpoints  String?
+  createdAt          DateTime @default(now())
+
+  trips              Trip[]
+
+  @@map("routes")
+}
+
+model Cargo {
+  id             String   @id @default(uuid())
+  description    String
+  weightKg       Float
+  volumeM3       Float?
+  containerNo    String?
+  isHazardous    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  shipments      Shipment[]
+
+  @@map("cargos")
+}
+
+model Trip {
+  id            String    @id @default(uuid())
+  tripNumber    String    @unique
+  contractId    String?
+  contract      Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  routeId       String?
+  route         Route?    @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  vehicleId     String?
+  vehicle       Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  driverId      String?
+  driver        Driver?   @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  status        String    @default("RASCUNHO")
+  departureTime DateTime?
+  arrivalTime   DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  shipments     Shipment[]
+  invoices      Invoice[]
+  expenses      Expense[]
+
+  @@map("trips")
+}
+
+model Shipment {
+  id          String   @id @default(uuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  cargoId     String
+  cargo       Cargo    @relation(fields: [cargoId], references: [id], onDelete: Cascade)
+  origin      String
+  destination String
+  createdAt   DateTime @default(now())
+
+  @@map("shipments")
+}
+
+model Maintenance {
+  id            String    @id @default(uuid())
+  vehicleId     String
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  description   String
+  cost          Float
+  status        String    @default("AGENDADO")
+  scheduledDate DateTime
+  completedDate DateTime?
+  workshop      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("maintenances")
+}
+
+// =====================================
+// FINANCE MODELS
+// =====================================
+
+model Invoice {
+  id            String      @id @default(uuid())
+  invoiceNumber String      @unique
+  tripId        String?
+  trip          Trip?       @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  customerId    String
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  companyId     String?
+  company       Company?    @relation(fields: [companyId], references: [id])
+  subtotal      Float
+  taxAmount     Float
+  totalAmount   Float
+  paidAmount    Float       @default(0.0)
+  currency      String      @default("MZN")
+  dueDate       DateTime
+  status        String      @default("PENDENTE")
+  deletedAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items         InvoiceItem[]
+  payments      Payment[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float    @default(1.0)
+  unitPrice   Float
+  totalPrice  Float
+  createdAt   DateTime @default(now())
+
+  @@map("invoice_items")
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  paymentNumber String   @unique
+  invoiceId     String
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  amount        Float
+  paymentMethod String   @default("TRANSFERENCIA_BANCARIA")
+  referenceNo   String?
+  notes         String?
+  paidAt        DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@map("payments")
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  tripId      String?
+  trip        Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  vehicleId   String?
+  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  category    String   @default("COMBUSTIVEL")
+  description String
+  amount      Float
+  date        DateTime @default(now())
+  receiptNo   String?
+  createdAt   DateTime @default(now())
+
+  @@map("expenses")
+}

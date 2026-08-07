@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+admin/node_modules/
+api/node_modules/
+
+# Environment files
+.env
+api/.env
+!api/.env.production.example
+
+# Local SQLite databases
+api/prisma/*.db
+api/prisma/*.db-journal
+
+# Logs
+*.log
+npm-debug.log*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/

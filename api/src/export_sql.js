@@ -4,17 +4,18 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-async function generateDump() {
+async function generateCleanDump() {
   const schemaSqlPath = path.join(__dirname, '../prisma/schema.sql');
-  const schemaSql = fs.readFileSync(schemaSqlPath, 'utf8');
+  let schemaSql = fs.readFileSync(schemaSqlPath, 'utf8');
 
-  let sql = `-- ====================================================================\n`;
-  sql += `-- DUMP COMPLETO BASE DE DADOS MYSQL - HOSTINGER (u178468876_TransDatabs)\n`;
-  sql += `-- N' TANDINHO TRANSPORTES S.A.\n`;
-  sql += `-- ====================================================================\n\n`;
-  sql += schemaSql + `\n\n-- ====================================================================\n`;
-  sql += `-- SEED DATA (DADOS INICIAIS DO ERP)\n`;
-  sql += `-- ====================================================================\n\n`;
+  // Remover todas as linhas de comentários SQL (começadas por --)
+  let cleanLines = schemaSql
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0 && !line.startsWith('--'))
+    .join('\n');
+
+  let sql = cleanLines + '\n\n';
 
   // 1. Roles
   const roles = await prisma.role.findMany();
@@ -131,7 +132,7 @@ async function generateDump() {
 
   const outputPath = path.join(__dirname, '../ntandinho_hostinger_database.sql');
   fs.writeFileSync(outputPath, sql, 'utf8');
-  console.log(`✅ Ficheiro SQL de dump criado com sucesso em: ${outputPath}`);
+  console.log(`✅ Ficheiro SQL limpo criado sem comentários em: ${outputPath}`);
 }
 
-generateDump().catch(console.error).finally(() => prisma.$disconnect());
+generateCleanDump().catch(console.error).finally(() => prisma.$disconnect());

@@ -5,9 +5,8 @@ import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // GARANTIA DE ISOLAMENTO: O base '/admin/' garante que todos os ficheiros compilados
-  // serão referenciados com /admin/assets/... evitando conflito com o site público /assets/
-  base: '/admin/',
+  // Relativo ('./') garante que todos os ficheiros JS/CSS carreguem independentemente do subdomínio ou subpasta
+  base: './',
   build: {
     outDir: 'dist',
     emptyOutDir: true,

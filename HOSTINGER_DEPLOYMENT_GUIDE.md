@@ -1,45 +1,62 @@
 # 🚀 Guia Completo de Deploy no Hostinger - N' Tandinho Transportes S.A.
 
-Este guia contém as instruções passo-a-passo para colocar no ar o **Website Público**, o **Painel ERP Admin** e o **Backend Node.js API** com **Base de Dados (MySQL ou SQLite)** na **Hostinger** (Alojamento Web Shared / Cloud / VPS).
+Este guia detalha o processo automatizado de preparação e envio para produção do **Website Público** e do **Painel ERP Admin** nos URLs:
+- **Website Público:** `https://ntandinho.zyphtech.com/`
+- **Painel Admin ERP:** `https://ntandinho.zyphtech.com/admin/login`
+- **API Backend Node.js:** `https://ntandinho.zyphtech.com/api/`
 
 ---
 
-## 📁 Estrutura do Projeto para Deploy
+## ⚡ 1-Clique: Comando de Preparação Automática de Deploy
 
-| Componente | Diretório Local | Destino na Hostinger |
+No terminal da raiz do projeto local, execute:
+
+```bash
+npm run deploy:prepare
+```
+
+Este comando executa automaticamente:
+1. Compilação TypeScript do Backend (`api/dist`) e geração do cliente Prisma.
+2. Compilação TypeScript + Vite do Frontend Admin (`admin/dist`).
+3. Geração automática da pasta `dist_production/public_html` pronta para o Hostinger!
+
+---
+
+## 📁 Estrutura da Pasta `dist_production/public_html`
+
+| Componente Local | Destino na Hostinger | Função |
 | :--- | :--- | :--- |
-| **Website Público** | Raiz (`index.html`, `assets/`, `.htaccess`) | `public_html/` |
-| **Painel ERP Admin** | `admin/dist/` | `public_html/admin/` |
-| **API Backend Node.js** | `api/` (`dist/`, `app.js`, `package.json`, `prisma/`) | Subpasta `api/` ou aplicação Node.js independente |
+| `dist_production/public_html/` | `public_html/` | Ficheiros do Site Público (`index.html`, `assets/`, `.htaccess`) |
+| `dist_production/public_html/admin/` | `public_html/admin/` | Ficheiros compilados do Painel ERP Admin React SPA |
+| `dist_production/public_html/api/` | `public_html/api/` (ou `/api`) | Aplicação Node.js Backend com Prisma & MySQL/SQLite |
 
 ---
 
-## 🛠️ OPÇÃO 1: Hostinger Web Hosting (hPanel / Node.js Web App)
+## 🛠️ OPÇÃO 1: Hostinger Web Hosting (hPanel / Node.js Web App) - RECOMENDADO
 
-### 1. Preparar a Base de Dados na Hostinger (MySQL)
-1. Acesse o painel da Hostinger (**hPanel**) ➔ **Bases de dados MySQL**.
+### 1. Criar Base de Dados MySQL na Hostinger
+1. No **hPanel**, aceda a **Bases de Dados MySQL**.
 2. Crie uma nova base de dados:
    - **Nome da BD:** `u123456789_ntandinho`
    - **Utilizador:** `u123456789_user`
    - **Palavra-passe:** `SuaSenhaSegura2026!`
-3. Anote a string de conexão:
-   ```env
-   DATABASE_URL="mysql://u123456789_user:SuaSenhaSegura2026!@localhost:3306/u123456789_ntandinho"
-   ```
-
-> 💡 *Nota: Se preferir usar SQLite (sem configurar MySQL), a aplicação usará automaticamente o ficheiro `prod.db` criado no backend.*
+3. Importe o ficheiro SQL de dados iniciais:
+   - Abra o **phpMyAdmin** na Hostinger.
+   - Selecione a base de dados criada e vá ao separador **Importar**.
+   - Escolha o ficheiro `ntandinho_hostinger_database.sql` (disponível dentro da pasta `dist_production/public_html/api/`).
+   - Clique em **Executar**.
 
 ---
 
-### 2. Configurar a Aplicação Node.js na Hostinger
+### 2. Configurar a Aplicação Node.js no hPanel
 1. No **hPanel**, navegue até **Aplicações Web ➔ Node.js**.
 2. Clique em **Criar Aplicação Node.js**:
    - **Versão do Node.js:** `20.x` ou `18.x`
    - **Modo da Aplicação:** `Production`
-   - **Raiz da Aplicação:** `public_html/api` (ou `/api`)
-   - **URL da Aplicação:** `seu-dominio.co.mz/api` (ou porta atribuída)
-   - **Ficheiro de Entrada:** `app.js` (ou `dist/server.js`)
-3. Adicione as Variáveis de Ambiente no painel ou crie o ficheiro `.env` dentro da pasta `api`:
+   - **Raiz da Aplicação:** `public_html/api`
+   - **URL da Aplicação:** `ntandinho.zyphtech.com/api`
+   - **Ficheiro de Entrada:** `app.js`
+3. Configure as Variáveis de Ambiente no ficheiro `public_html/api/.env`:
    ```env
    PORT=5000
    NODE_ENV=production
@@ -50,122 +67,48 @@ Este guia contém as instruções passo-a-passo para colocar no ar o **Website P
 
 ---
 
-### 3. Fazer Upload dos Ficheiros via FTP / File Manager
-
-1. **Website Público (`public_html/`):**
-   - Envie todos os ficheiros da raiz local (`index.html`, `assets/`, `.htaccess`, `robots.txt`, `sitemap.xml`, `uploads/`) para a pasta `public_html/` na Hostinger.
-
-2. **Painel Admin ERP (`public_html/admin/`):**
-   - Certifique-se de que compilou o admin localmente executando `npm run build` na pasta `admin/`.
-   - Crie a pasta `admin` dentro de `public_html/` na Hostinger.
-   - Copie o **conteúdo** da pasta local `admin/dist/` (incluindo `index.html`, `assets/` e `.htaccess`) para `public_html/admin/`.
-
-3. **Backend API (`public_html/api/`):**
-   - Certifique-se de que compilou a API localmente executando `npm run build` na pasta `api/`.
-   - Envie para a pasta `public_html/api/`:
-     - Pasta `dist/`
-     - Pasta `prisma/`
-     - Ficheiro `app.js`
-     - Ficheiro `package.json`
-     - Ficheiro `.env` (configurado com as credenciais de produção)
+### 3. Enviar os Ficheiros para a Hostinger (File Manager / FTP)
+1. Abra o **Gerenciador de Arquivos (File Manager)** no **hPanel** da Hostinger.
+2. Navegue até à pasta `public_html/`.
+3. Envie todo o **conteúdo** que se encontra dentro da pasta local `dist_production/public_html/` para a pasta `public_html/` do servidor.
+4. Confirme que a estrutura no servidor ficou:
+   - `public_html/index.html`
+   - `public_html/.htaccess`
+   - `public_html/admin/index.html`
+   - `public_html/admin/.htaccess`
+   - `public_html/api/app.js`
 
 ---
 
-### 4. Instalar Dependências e Inicializar a Base de Dados
-
-No terminal SSH da Hostinger (ou usando o Terminal integrado do hPanel):
+### 4. Instalar Dependências no Terminal da Hostinger
+No SSH da Hostinger ou Terminal do hPanel:
 ```bash
 cd public_html/api
 
 # 1. Instalar dependências de produção
 npm install --production
 
-# 2. Gerar cliente do Prisma
+# 2. Gerar Prisma Client
 npx prisma generate
-
-# 3. Aplicar esquema na base de dados
-npx prisma db push
-
-# 4. Semear a base de dados com o administrador inicial e dados do ERP
-npm run seed
 ```
 
 ---
 
-## 💻 OPÇÃO 2: Hostinger VPS (Ubuntu 22.04 / Nginx / PM2)
+## 🔑 Credenciais de Acesso de Produção
 
-Se estiver a utilizar um **VPS na Hostinger**:
+Após a importação do ficheiro SQL ou execução do seed:
 
-### 1. Instalar Nginx, Node.js e PM2
-```bash
-sudo apt update && sudo apt install -y nginx nodejs npm mysql-server
-sudo npm install -g pm2
-```
-
-### 2. Configurar o Nginx (`/etc/nginx/sites-available/default`)
-```nginx
-server {
-    listen 80;
-    server_name seu-dominio.co.mz www.seu-dominio.co.mz;
-
-    root /var/www/ntandinho;
-    index index.html;
-
-    # Site Público
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Painel Admin ERP (/admin)
-    location /admin {
-        alias /var/www/ntandinho/admin;
-        try_files $uri $uri/ /admin/index.html;
-    }
-
-    # API Backend (/api)
-    location /api {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Servir Ficheiros de Upload
-    location /uploads {
-        alias /var/www/ntandinho/uploads;
-    }
-}
-```
-
-### 3. Iniciar o Servidor API com PM2
-```bash
-cd /var/www/ntandinho/api
-pm2 start dist/server.js --name "ntandinho-api"
-pm2 save
-pm2 startup
-```
-
----
-
-## 🔑 Credenciais de Acesso de Produção (Iniciais)
-
-Após concluir a semeação da base de dados (`npm run seed`):
-
-- **URL do Site Público:** `https://seu-dominio.co.mz/`
-- **URL do Painel Admin:** `https://seu-dominio.co.mz/admin`
+- **Site Público:** [https://ntandinho.zyphtech.com/](https://ntandinho.zyphtech.com/)
+- **Painel Admin ERP:** [https://ntandinho.zyphtech.com/admin/login](https://ntandinho.zyphtech.com/admin/login)
 - **Utilizador Administrador:** `admin@ntandinho.co.mz`
 - **Palavra-passe Padrão:** `Admin2026!`
 
 ---
 
-## 🛡️ Checklist de Verificação Pós-Deploy
+## 🛡️ Checklist de Deploy Concluído
 
-- [x] Compilação do Admin React concluída sem erros (`npm run build` na pasta `/admin`)
-- [x] Compilação da API TypeScript e geração Prisma concluídas (`npm run build` na pasta `/api`)
-- [x] Ficheiro `.htaccess` configurado com regras de reescrita SPA e HTTPS
-- [x] Ficheiro `api/app.js` configurado para compatibilidade com o seletor Node.js do Hostinger
-- [x] Ficheiro de exemplo `.env.production.example` criado
-- [x] Esquemas Prisma preparados para MySQL (`schema.mysql.prisma`) e SQLite (`schema.prisma`)
-- [x] Script de semeação inicial de base de dados testado e funcional (`npm run seed`)
+- [x] Script `npm run deploy:prepare` criado e funcional.
+- [x] Geração automática da pasta `dist_production/public_html`.
+- [x] Ficheiro DDL/Seed `ntandinho_hostinger_database.sql` incluído no pacote da API.
+- [x] Regras `.htaccess` prontas para SPA (`/admin/login`) e proxy de API (`/api`).
+- [x] Suporte para MySQL e SQLite no Prisma.

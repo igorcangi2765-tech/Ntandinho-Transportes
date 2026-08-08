@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const fleet_controller_1 = require("../controllers/fleet.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const fleetRouter = (0, express_1.Router)();
+fleetRouter.use(auth_middleware_1.requireAuth);
+fleetRouter.get('/trips', fleet_controller_1.FleetController.getTrips);
+fleetRouter.get('/vehicles', fleet_controller_1.FleetController.getVehicles);
+fleetRouter.get('/drivers', fleet_controller_1.FleetController.getDrivers);
+fleetRouter.post('/trips/assign', fleet_controller_1.FleetController.assignTrip);
+fleetRouter.patch('/trips/:id/status', fleet_controller_1.FleetController.updateStatus);
+exports.default = fleetRouter;

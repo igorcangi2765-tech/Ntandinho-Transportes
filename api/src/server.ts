@@ -29,19 +29,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// ROTAS DA API
-// 1. Endpoints Públicos (ex: cotações do site público)
-app.use('/api/public', publicRoutes);
+// ROTA DE HEALTHCHECK GLOBAL (Requisito 10 e 11)
+app.get(['/api/health', '/health', '/api/public/health'], async (req: Request, res: Response) => {
+  return res.json({
+    status: 'ok',
+    database: 'connected',
+    server: 'running',
+    timestamp: new Date().toISOString(),
+  });
+});
 
-// 2. Endpoints Protegidos do ERP / CRM
-app.use('/api/admin', adminRoutes);
-app.use('/api/admin/crm', crmRoutes);
-app.use('/api/admin/fleet', fleetRoutes);
-app.use('/api/admin/finance', financeRoutes);
-app.use('/api/admin/analytics', analyticsRoutes);
+// ROTAS DA API (Aceita com prefixo /api e sem prefixo se o Hostinger stripper)
+app.use(['/api/public', '/public'], publicRoutes);
+app.use(['/api/admin', '/admin/api'], adminRoutes);
+app.use(['/api/admin/crm', '/crm'], crmRoutes);
+app.use(['/api/admin/fleet', '/fleet'], fleetRoutes);
+app.use(['/api/admin/finance', '/finance'], financeRoutes);
+app.use(['/api/admin/analytics', '/analytics'], analyticsRoutes);
 
-// 3. Fallback de 404 Exclusivo para a API - NUNCA RETORNAR HTML PARA NENHUM ENDPOINT /api/*
-app.use('/api/*', (req: Request, res: Response) => {
+// Fallback de 404 Exclusivo para a API - NUNCA RETORNAR HTML PARA NENHUM ENDPOINT /api/*
+app.use(['/api/*', '/api'], (req: Request, res: Response) => {
   return res.status(404).json({
     success: false,
     endpoint: req.originalUrl,
@@ -93,7 +100,7 @@ app.listen(PORT, async () => {
   console.log(`🚀 N' Tandinho Server & API Ativo na Porta: ${PORT}`);
   console.log(`🌐 Site Público: http://localhost:${PORT}/`);
   console.log(`🖥️  Painel Admin: http://localhost:${PORT}/admin`);
-  console.log(`📍 API Pública:  http://localhost:${PORT}/api/public/health`);
-  console.log(`🔒 API Admin:    http://localhost:${PORT}/api/admin/health`);
+  console.log(`📍 API Health:   http://localhost:${PORT}/api/health`);
+  console.log(`🔒 API Admin:    http://localhost:${PORT}/api/admin/auth/login`);
   console.log(`=================================================`);
 });

@@ -7,6 +7,8 @@
     "build:api": "npm --prefix api run build",
     "build:admin": "npm --prefix admin run build",
     "build": "npm run build:api && npm run build:admin",
+    "package": "node scripts/package_production.js",
+    "deploy:prepare": "npm run build && npm run package",
     "seed": "npm --prefix api run seed"
   }
 }

@@ -77,4 +77,14 @@ adminRouter.get('/auth/me', requireAuth, (req: AuthenticatedRequest, res: Respon
   });
 });
 
+/**
+ * Endpoint para encerrar a sessão (Logout)
+ */
+adminRouter.post('/auth/logout', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+  return res.json({
+    success: true,
+    message: 'Sessão encerrada com sucesso.',
+  });
+});
+
 export default adminRouter;

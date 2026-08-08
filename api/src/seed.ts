@@ -5,7 +5,23 @@ const prisma = new PrismaClient();
 
 export async function seedDatabase() {
   try {
+    console.log("🌱 A iniciar semeação da base de dados ERP N' Tandinho...");
+
     // 1. Roles & Admin User
+    let superAdminRole = await prisma.role.findUnique({
+      where: { name: 'SUPER_ADMIN' },
+    });
+
+    if (!superAdminRole) {
+      superAdminRole = await prisma.role.create({
+        data: {
+          name: 'SUPER_ADMIN',
+          description: 'Super Administrador com Acesso Total e Irrestrito',
+          isSystem: true,
+        },
+      });
+    }
+
     let adminRole = await prisma.role.findUnique({
       where: { name: 'ADMIN' },
     });
@@ -14,10 +30,25 @@ export async function seedDatabase() {
       adminRole = await prisma.role.create({
         data: {
           name: 'ADMIN',
-          description: 'Administrador Geral com acesso total ao ERP',
+          description: 'Administrador de Operações e Frota',
           isSystem: true,
         },
       });
+    }
+
+    // Criar roles adicionais
+    const defaultRoles = [
+      { name: 'GERENTE_FROTA', description: 'Gestão de Veículos, Motoristas e Manutenções' },
+      { name: 'FINANCEIRO', description: 'Gestão de Faturas, Pagamentos e Despesas' },
+      { name: 'MOTORISTA', description: 'Acesso a Guias de Transporte e Viagens Alocadas' },
+      { name: 'CLIENTE', description: 'Acesso ao Portal de Clientes e Rastreio' },
+    ];
+
+    for (const r of defaultRoles) {
+      const exists = await prisma.role.findUnique({ where: { name: r.name } });
+      if (!exists) {
+        await prisma.role.create({ data: { name: r.name, description: r.description, isSystem: true } });
+      }
     }
 
     let wildcardPermission = await prisma.permission.findFirst({
@@ -29,7 +60,14 @@ export async function seedDatabase() {
         data: {
           action: '*',
           resource: '*',
-          description: 'Acesso total a todos os recursos',
+          description: 'Acesso total a todos os recursos do sistema',
+        },
+      });
+
+      await prisma.rolePermission.create({
+        data: {
+          roleId: superAdminRole.id,
+          permissionId: wildcardPermission.id,
         },
       });
 
@@ -41,6 +79,7 @@ export async function seedDatabase() {
       });
     }
 
+    // Administrador Principal
     const adminEmail = 'admin@ntandinho.co.mz';
     const defaultPassword = 'Admin2026!';
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
@@ -55,12 +94,12 @@ export async function seedDatabase() {
           email: adminEmail,
           password: hashedPassword,
           name: 'Administrador',
-          roleId: adminRole.id,
+          roleId: superAdminRole.id,
           isActive: true,
           deletedAt: null,
         },
       });
-      console.log('✅ Utilizador Administrador criado com sucesso: admin@ntandinho.co.mz');
+      console.log('  ✓ Utilizador Administrador criado com sucesso: admin@ntandinho.co.mz');
     } else {
       const isPasswordValid = await bcrypt.compare(defaultPassword, existingAdmin.password);
       if (!isPasswordValid || !existingAdmin.isActive || existingAdmin.deletedAt) {
@@ -69,18 +108,82 @@ export async function seedDatabase() {
           data: {
             password: hashedPassword,
             name: 'Administrador',
-            roleId: adminRole.id,
+            roleId: superAdminRole.id,
             isActive: true,
             deletedAt: null,
           },
         });
-        console.log('🔄 Utilizador Administrador corrigido e atualizado com palavra-passe válida.');
+        console.log('  ✓ Utilizador Administrador atualizado e verificado.');
       } else {
-        console.log('✔ Utilizador Administrador validado com sucesso.');
+        console.log('  ✓ Utilizador Administrador validado com sucesso.');
       }
     }
 
-    // 2. Empresas & Clientes Corporativos
+    // 2. Métodos de Pagamento Iniciais
+    const paymentMethods = [
+      { code: 'TRANSFERENCIA_BANCARIA', name: 'Transferência Bancária (BCI / Millennium BIM / Standard Bank)' },
+      { code: 'MPESA', name: 'M-Pesa Vodacom' },
+      { code: 'EMOLA', name: 'e-Mola Movitel' },
+      { code: 'NUMERARIO', name: 'Numerário / Dinheiro' },
+      { code: 'CHEQUE', name: 'Cheque Visado' },
+    ];
+
+    for (const pm of paymentMethods) {
+      const exists = await prisma.paymentMethod.findUnique({ where: { code: pm.code } });
+      if (!exists) {
+        await prisma.paymentMethod.create({ data: pm });
+      }
+    }
+    console.log('  ✓ Métodos de pagamento semeados.');
+
+    // 3. Configurações Globais do ERP
+    const defaultSettings = [
+      { key: 'company_name', value: "N' Tandinho Transportes S.A.", description: 'Nome da Empresa' },
+      { key: 'company_nuit', value: '400881920', description: 'NUIT da Empresa' },
+      { key: 'currency', value: 'MZN', description: 'Moeda Padrão' },
+      { key: 'tax_rate_percent', value: '16.0', description: 'Taxa de IVA (%)' },
+      { key: 'support_phone', value: '+258 84 300 0000', description: 'Telefone de Suporte' },
+      { key: 'system_status', value: 'OPERACIONAL', description: 'Estado do Sistema' },
+    ];
+
+    for (const s of defaultSettings) {
+      const exists = await prisma.setting.findUnique({ where: { key: s.key } });
+      if (!exists) {
+        await prisma.setting.create({ data: s });
+      }
+    }
+    console.log('  ✓ Configurações do sistema semeadas.');
+
+    // 4. Categorias de Veículos
+    const categories = [
+      { name: 'Camião Pesado (Tractor)', description: 'Tractores de Longa Distância 6x4 / 4x2' },
+      { name: 'Semi-Reboque (Trailer)', description: 'Atrelados de Carga Geral e Porta-Contentores' },
+      { name: 'Camião Basculante (Dump Truck)', description: 'Transporte de Minérios e Agregados' },
+      { name: 'Carrinha / Distribuição Leve', description: 'Distribuição Urbana e Encomendas' },
+    ];
+
+    for (const cat of categories) {
+      const exists = await prisma.vehicleCategory.findUnique({ where: { name: cat.name } });
+      if (!exists) {
+        await prisma.vehicleCategory.create({ data: cat });
+      }
+    }
+
+    // 5. Filiais / Sucursais
+    const branches = [
+      { name: 'Sede Maputo (Matola)', code: 'BR-MPT', city: 'Matola', address: 'Estrada Nacional N1, Km 15' },
+      { name: 'Filial Beira (Corredor)', code: 'BR-BEI', city: 'Beira', address: 'Zona Industrial da Munhava' },
+      { name: 'Filial Nacala (Porto)', code: 'BR-NCL', city: 'Nacala', address: 'Av. dos Trabalhadores' },
+    ];
+
+    for (const b of branches) {
+      const exists = await prisma.branch.findUnique({ where: { code: b.code } });
+      if (!exists) {
+        await prisma.branch.create({ data: b });
+      }
+    }
+
+    // 6. Empresas & Clientes Corporativos
     const companyCount = await prisma.company.count();
     if (companyCount === 0) {
       const company1 = await prisma.company.create({
@@ -143,19 +246,6 @@ export async function seedDatabase() {
         },
       });
 
-      const company6 = await prisma.company.create({
-        data: {
-          name: 'Fazendas Agrícolas de Nampula Lda',
-          nuit: '400551928',
-          email: 'compras@fazendasnampula.co.mz',
-          phone: '+258 26 218 440',
-          address: 'Estrada Nacional N1, Km 12',
-          city: 'Nampula',
-          creditLimit: 2500000.0,
-        },
-      });
-
-      // Clientes
       const c1 = await prisma.customer.create({
         data: {
           companyId: company1.id,
@@ -216,19 +306,7 @@ export async function seedDatabase() {
         },
       });
 
-      const c6 = await prisma.customer.create({
-        data: {
-          companyId: company6.id,
-          name: 'Fazendas Agrícolas de Nampula Lda',
-          email: 'compras@fazendasnampula.co.mz',
-          phone: '+258 26 218 440',
-          nuit: '400551928',
-          isCorporate: true,
-          status: 'ATIVO',
-        },
-      });
-
-      // 3. Frota de Camiões (Vehicles)
+      // 7. Frota de Veículos
       const v1 = await prisma.vehicle.create({
         data: {
           plateNumber: 'ABM-849-MC',
@@ -294,33 +372,7 @@ export async function seedDatabase() {
         },
       });
 
-      const v6 = await prisma.vehicle.create({
-        data: {
-          plateNumber: 'AHB-405-MC',
-          make: 'Volvo',
-          model: 'FMX 460 Dump Truck',
-          year: 2024,
-          status: 'MANUTENCAO',
-          mileageKm: 142000,
-          nextServiceKm: 140000,
-          isAvailable: false,
-        },
-      });
-
-      const v7 = await prisma.vehicle.create({
-        data: {
-          plateNumber: 'AIC-772-MC',
-          make: 'Scania',
-          model: 'G460 Heavy Hauler',
-          year: 2025,
-          status: 'OPERACIONAL',
-          mileageKm: 28900,
-          nextServiceKm: 40000,
-          isAvailable: true,
-        },
-      });
-
-      // 4. Motoristas (Drivers)
+      // 8. Motoristas
       const d1 = await prisma.driver.create({
         data: {
           name: 'João Mucavel',
@@ -361,27 +413,7 @@ export async function seedDatabase() {
         },
       });
 
-      const d5 = await prisma.driver.create({
-        data: {
-          name: 'Bernardo Cossa',
-          licenseNumber: 'C-551029',
-          phone: '+258 84 551 0022',
-          status: 'EM_VIAGEM',
-          isAvailable: false,
-        },
-      });
-
-      const d6 = await prisma.driver.create({
-        data: {
-          name: 'Tomas Macamo',
-          licenseNumber: 'C-882019',
-          phone: '+258 82 882 0111',
-          status: 'DISPONIVEL',
-          isAvailable: true,
-        },
-      });
-
-      // 5. Rotas SADC & Nacionais (Routes)
+      // 9. Rotas SADC & Nacionais
       const r1 = await prisma.route.create({
         data: {
           name: 'Maputo ➔ Nampula (Corredor N1)',
@@ -415,29 +447,7 @@ export async function seedDatabase() {
         },
       });
 
-      const r4 = await prisma.route.create({
-        data: {
-          name: 'Pemba ➔ Palma (Projecto Gás LNG)',
-          origin: 'Pemba',
-          destination: 'Palma (Afungi)',
-          distanceKm: 410.0,
-          estDurationHours: 8.0,
-          borderCheckpoints: 'N/A (Nacional)',
-        },
-      });
-
-      const r5 = await prisma.route.create({
-        data: {
-          name: 'Tete ➔ Beira (Corredor do Carvão)',
-          origin: 'Moatize (Tete)',
-          destination: 'Porto da Beira',
-          distanceKm: 590.0,
-          estDurationHours: 11.0,
-          borderCheckpoints: 'N/A (Nacional)',
-        },
-      });
-
-      // 6. Cotações (Quotations)
+      // 10. Cotações & Contratos
       const q1 = await prisma.quotation.create({
         data: {
           quotationNumber: 'COT-2026-001',
@@ -456,61 +466,6 @@ export async function seedDatabase() {
         },
       });
 
-      const q2 = await prisma.quotation.create({
-        data: {
-          quotationNumber: 'COT-2026-002',
-          customerId: c2.id,
-          companyId: company2.id,
-          origin: 'Beira',
-          destination: 'Lilongwe (Malawi)',
-          cargoDescription: 'Lingotes de Alumínio Exportação (Carga SADC)',
-          weightKg: 32000.0,
-          priceSubtotal: 520000.0,
-          taxAmount: 83200.0,
-          totalPrice: 603200.0,
-          currency: 'MZN',
-          validUntil: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-          status: 'APROVADA',
-        },
-      });
-
-      const q3 = await prisma.quotation.create({
-        data: {
-          quotationNumber: 'COT-2026-003',
-          customerId: c3.id,
-          companyId: company3.id,
-          origin: 'Moatize (Tete)',
-          destination: 'Porto da Beira',
-          cargoDescription: 'Equipamento Industrial de Mineração',
-          weightKg: 40000.0,
-          priceSubtotal: 480000.0,
-          taxAmount: 76800.0,
-          totalPrice: 556800.0,
-          currency: 'MZN',
-          validUntil: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-          status: 'ENVIADA',
-        },
-      });
-
-      const q4 = await prisma.quotation.create({
-        data: {
-          quotationNumber: 'COT-2026-004',
-          customerId: c5.id,
-          companyId: company5.id,
-          origin: 'Matola',
-          destination: 'Nampula',
-          cargoDescription: 'Sacos de Cimento Portland (Carga a Granel 34T)',
-          weightKg: 34000.0,
-          priceSubtotal: 380000.0,
-          taxAmount: 60800.0,
-          totalPrice: 440800.0,
-          currency: 'MZN',
-          validUntil: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
-          status: 'APROVADA',
-        },
-      });
-
-      // 7. Contratos (Contracts)
       const ct1 = await prisma.contract.create({
         data: {
           contractNumber: 'CTR-2026-101',
@@ -524,33 +479,7 @@ export async function seedDatabase() {
         },
       });
 
-      const ct2 = await prisma.contract.create({
-        data: {
-          contractNumber: 'CTR-2026-102',
-          quotationId: q2.id,
-          customerId: c2.id,
-          companyId: company2.id,
-          startDate: new Date('2026-02-01'),
-          endDate: new Date('2026-11-30'),
-          totalAmount: 7238000.0,
-          status: 'ATIVO',
-        },
-      });
-
-      const ct3 = await prisma.contract.create({
-        data: {
-          contractNumber: 'CTR-2026-103',
-          quotationId: q4.id,
-          customerId: c5.id,
-          companyId: company5.id,
-          startDate: new Date('2026-03-01'),
-          endDate: new Date('2026-12-31'),
-          totalAmount: 3950000.0,
-          status: 'ATIVO',
-        },
-      });
-
-      // 8. Viagens (Trips)
+      // 11. Viagens
       const t1 = await prisma.trip.create({
         data: {
           tripNumber: 'TRIP-2026-901',
@@ -564,59 +493,7 @@ export async function seedDatabase() {
         },
       });
 
-      const t2 = await prisma.trip.create({
-        data: {
-          tripNumber: 'TRIP-2026-902',
-          contractId: ct2.id,
-          routeId: r2.id,
-          vehicleId: v2.id,
-          driverId: d2.id,
-          status: 'EM_TRANSITO',
-          departureTime: new Date(Date.now() - 6 * 60 * 60 * 1000),
-          notes: 'Lingotes de Alumínio SADC rumo a Lilongwe.',
-        },
-      });
-
-      const t3 = await prisma.trip.create({
-        data: {
-          tripNumber: 'TRIP-2026-903',
-          contractId: ct3.id,
-          routeId: r3.id,
-          vehicleId: v4.id,
-          driverId: d4.id,
-          status: 'EM_TRANSITO',
-          departureTime: new Date(Date.now() - 18 * 60 * 60 * 1000),
-          notes: 'Despacho de Cimento para a Região Norte.',
-        },
-      });
-
-      const t4 = await prisma.trip.create({
-        data: {
-          tripNumber: 'TRIP-2026-904',
-          contractId: ct1.id,
-          routeId: r4.id,
-          vehicleId: v5.id,
-          driverId: d5.id,
-          status: 'ALOCADO',
-          notes: 'Aguarda carregamento no Porto de Pemba.',
-        },
-      });
-
-      const t5 = await prisma.trip.create({
-        data: {
-          tripNumber: 'TRIP-2026-880',
-          contractId: ct2.id,
-          routeId: r5.id,
-          vehicleId: v3.id,
-          driverId: d3.id,
-          status: 'CONCLUIDO',
-          departureTime: new Date(Date.now() - 72 * 60 * 60 * 1000),
-          arrivalTime: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          notes: 'Entrega efetuada com sucesso no Porto da Beira.',
-        },
-      });
-
-      // 9. Faturas (Invoices)
+      // 12. Faturas & Pagamentos
       const inv1 = await prisma.invoice.create({
         data: {
           invoiceNumber: 'FT-2026-001',
@@ -626,146 +503,30 @@ export async function seedDatabase() {
           subtotal: 350000.0,
           taxAmount: 56000.0,
           totalAmount: 406000.0,
-          paidAmount: 0.0,
+          paidAmount: 406000.0,
           currency: 'MZN',
           dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-          status: 'PENDENTE',
-        },
-      });
-
-      const inv2 = await prisma.invoice.create({
-        data: {
-          invoiceNumber: 'FT-2026-002',
-          tripId: t2.id,
-          customerId: c2.id,
-          companyId: company2.id,
-          subtotal: 520000.0,
-          taxAmount: 83200.0,
-          totalAmount: 603200.0,
-          paidAmount: 603200.0,
-          currency: 'MZN',
-          dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
           status: 'PAGO',
         },
       });
 
-      const inv3 = await prisma.invoice.create({
-        data: {
-          invoiceNumber: 'FT-2026-003',
-          tripId: t5.id,
-          customerId: c3.id,
-          companyId: company3.id,
-          subtotal: 480000.0,
-          taxAmount: 76800.0,
-          totalAmount: 556800.0,
-          paidAmount: 300000.0,
-          currency: 'MZN',
-          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-          status: 'PAGO_PARCIAL',
-        },
-      });
-
-      const inv4 = await prisma.invoice.create({
-        data: {
-          invoiceNumber: 'FT-2026-004',
-          tripId: t3.id,
-          customerId: c5.id,
-          companyId: company5.id,
-          subtotal: 380000.0,
-          taxAmount: 60800.0,
-          totalAmount: 440800.0,
-          paidAmount: 440800.0,
-          currency: 'MZN',
-          dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-          status: 'PAGO',
-        },
-      });
-
-      // 10. Pagamentos (Payments)
       await prisma.payment.create({
         data: {
           paymentNumber: 'REC-2026-001',
-          invoiceId: inv2.id,
-          customerId: c2.id,
-          amount: 603200.0,
+          invoiceId: inv1.id,
+          customerId: c1.id,
+          amount: 406000.0,
           paymentMethod: 'TRANSFERENCIA_BANCARIA',
-          referenceNo: 'BVM-90182377',
-          paidAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        },
-      });
-
-      await prisma.payment.create({
-        data: {
-          paymentNumber: 'REC-2026-002',
-          invoiceId: inv3.id,
-          customerId: c3.id,
-          amount: 300000.0,
-          paymentMethod: 'TRANSFERENCIA_BANCARIA',
-          referenceNo: 'BCI-4491028',
+          referenceNo: 'BCI-90182377',
           paidAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        },
-      });
-
-      await prisma.payment.create({
-        data: {
-          paymentNumber: 'REC-2026-003',
-          invoiceId: inv4.id,
-          customerId: c5.id,
-          amount: 440800.0,
-          paymentMethod: 'TRANSFERENCIA_BANCARIA',
-          referenceNo: 'STD-8829102',
-          paidAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-        },
-      });
-
-      // 11. Despesas de Operação (Expenses)
-      await prisma.expense.create({
-        data: {
-          tripId: t1.id,
-          vehicleId: v1.id,
-          category: 'COMBUSTIVEL',
-          description: 'Abastecimento Diesel 450L em Save',
-          amount: 43650.0,
-          receiptNo: 'REC-PETROMOC-9921',
-        },
-      });
-
-      await prisma.expense.create({
-        data: {
-          tripId: t2.id,
-          vehicleId: v2.id,
-          category: 'PORTAGEM',
-          description: 'Taxa de Portagem e Fronteira Zóbuè',
-          amount: 18500.0,
-          receiptNo: 'PORT-ZOB-401',
-        },
-      });
-
-      await prisma.expense.create({
-        data: {
-          tripId: t1.id,
-          vehicleId: v1.id,
-          category: 'SUBSIDIO',
-          description: 'Subsídio de Viagem e Alimentação Motorista',
-          amount: 15000.0,
-          receiptNo: 'SUB-JOAO-01',
-        },
-      });
-
-      await prisma.expense.create({
-        data: {
-          vehicleId: v6.id,
-          category: 'MANUTENCAO',
-          description: 'Mudança de Óleo, Filtros e Revisão dos Traves',
-          amount: 78000.0,
-          receiptNo: 'SERV-VOLVO-881',
         },
       });
     }
 
-    console.log("✅ Base de Dados semeada com sucesso com dados fictícios do ERP N' Tandinho!");
+    console.log("✅ Base de Dados semeada com sucesso para produção no ERP N' Tandinho!");
   } catch (err) {
     console.error("❌ Erro ao semear base de dados:", err);
+    throw err;
   } finally {
     await prisma.$disconnect();
   }

@@ -1,6 +1,6 @@
 # ====================================================================
 # CONFIGURAÇÃO DE REWRITE E SEGURANÇA PARA HOSTINGER
-# Website N' Tandinho Transportes S.A. + Painel ERP Admin
+# Website N' Tandinho Transportes S.A. + Painel ERP Admin + PHP 8.3 API
 # ====================================================================
 
 <IfModule mod_rewrite.c>
@@ -11,29 +11,23 @@
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # 2. ENCAMINHAR /api E /api/* PARA A API NODE.JS (REVERSE PROXY MOD_PROXY OU PASSENGER)
-  <IfModule mod_proxy.c>
-    RewriteRule ^api/(.*)$ http://127.0.0.1:5000/api/$1 [P,L]
-    RewriteRule ^api$ http://127.0.0.1:5000/api [P,L]
-  </IfModule>
+  # 2. ROTEAMENTO DA API PHP 8.3 (/api e /api/*) - REDIRECIONAR PARA api/index.php
+  RewriteCond %{REQUEST_URI} ^/api(/.*)?$ [NC]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^api(/.*)?$ api/index.php [QSA,L]
 
-  # 3. ISOLAR A API NODE.JS (/api e /api/*) - NUNCA REDIRECIONAR PARA INDEX.HTML DO REACT!
-  RewriteCond %{REQUEST_URI} ^/api [NC]
-  RewriteRule ^ - [L]
-
-  # 4. Ignorar ficheiros e diretórios reais existentes (imagens, css, js, uploads)
+  # 3. Ignorar ficheiros e diretórios reais existentes (imagens, css, js, uploads)
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # 5. Roteamento do Painel Admin ERP (/admin e /admin/*) para /admin/index.html
+  # 4. Roteamento do Painel Admin ERP (/admin e /admin/*) para /admin/index.html
   RewriteRule ^admin(/.*)?$ /admin/index.html [L]
 
-  # 6. Fallback do Site Público para index.html
+  # 5. Fallback do Site Público para index.html
   RewriteRule ^index\.html$ - [L]
   RewriteRule . /index.html [L]
 </IfModule>
-
 
 # ====================================================================
 # CABEÇALHOS DE SEGURANÇA E CACHING

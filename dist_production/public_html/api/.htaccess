@@ -1,17 +1,18 @@
 # ====================================================================
-# CONFIGURAÇÃO DA APLICAÇÃO NODE.JS / EXPRESS NO HPANEL HOSTINGER
-# Sub-diretório /api/
+# CONFIGURAÇÃO DE ROTEAMENTO REWRITE PARA A API PHP 8.3 (HOSTINGER)
+# ERP N'Tandinho Transportes S.A.
 # ====================================================================
 
-<IfModule mod_passenger.c>
-  PassengerEnabled on
-  PassengerAppType node
-  PassengerStartupFile app.js
-</IfModule>
-
 <IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^(.*)$ app.js [L]
+    RewriteEngine On
+    RewriteBase /api/
+
+    # Passar o cabeçalho Authorization Bearer para a variável $_SERVER['HTTP_AUTHORIZATION']
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Se o ficheiro ou diretório não existir fisicamente, direciona tudo para index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>

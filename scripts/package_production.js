@@ -24,8 +24,45 @@ function copyRecursive(src, dest, ignoreList = []) {
   }
 }
 
+function calculateDirectorySize(dirPath) {
+  let totalSize = 0;
+  if (!fs.existsSync(dirPath)) return 0;
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      totalSize += calculateDirectorySize(fullPath);
+    } else if (entry.isFile()) {
+      totalSize += fs.statSync(fullPath).size;
+    }
+  }
+  return totalSize;
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function printDirectoryTree(dirPath, prefix = '') {
+  if (!fs.existsSync(dirPath)) return;
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+  entries.forEach((entry, index) => {
+    const isLast = index === entries.length - 1;
+    const marker = isLast ? '└── ' : '├── ';
+    console.log(`${prefix}${marker}${entry.name}${entry.isDirectory() ? '/' : ''}`);
+    if (entry.isDirectory()) {
+      const newPrefix = prefix + (isLast ? '    ' : '│   ');
+      printDirectoryTree(path.join(dirPath, entry.name), newPrefix);
+    }
+  });
+}
+
 function buildProductionPackage() {
-  console.log('📦 A iniciar o empacotamento para a Hostinger...');
+  console.log('📦 A iniciar o empacotamento limpo para a Hostinger (PHP 8.3 + React SPA)...');
 
   // 1. Limpar diretório dist_production anterior se existir
   if (fs.existsSync(distProdDir)) {
@@ -76,48 +113,59 @@ function buildProductionPackage() {
     console.log('  ✓ admin/public/.htaccess -> public_html/admin/.htaccess');
   }
 
-  // 4. Copiar Backend API (api) para public_html/api
-  console.log('🔒 A copiar Backend API Node.js para public_html/api...');
-  const apiItemsToCopy = [
-    'app.js',
-    'package.json',
-    '.env.production.example',
-    'ntandinho_hostinger_database.sql',
-    'dist',
-    'prisma',
+  // 4. Copiar API PHP 8.3 Nativa para public_html/api
+  console.log('🔒 A copiar Backend API PHP 8.3 Nativa para public_html/api...');
+  const apiPhpItemsToCopy = [
+    'index.php',
+    'health.php',
     '.htaccess',
+    'config',
+    'middleware',
+    'helpers',
+    'auth',
+    'customers',
+    'quotations',
+    'vehicles',
+    'drivers',
+    'trips',
+    'routes',
+    'bookings',
+    'invoices',
+    'payments',
+    'expenses',
+    'maintenance',
+    'stock',
+    'notifications',
+    'reports',
+    'analytics',
+    'settings',
+    'ntandinho_hostinger_database.sql',
   ];
 
-  for (const item of apiItemsToCopy) {
+  for (const item of apiPhpItemsToCopy) {
     const srcPath = path.resolve(rootDir, 'api', item);
     const destPath = path.resolve(apiDestDir, item);
     if (fs.existsSync(srcPath)) {
-      copyRecursive(srcPath, destPath, ['dev.db', 'prod.db']);
+      copyRecursive(srcPath, destPath, ['node_modules', 'dist', 'src', 'package.json', 'package-lock.json', 'app.js', 'dev.db', 'prisma', 'tsconfig.json']);
       console.log(`  ✓ api/${item}`);
     }
   }
 
-  // Criar um .env inicial em public_html/api com modelo de produção
-  const envProdSrc = path.resolve(rootDir, 'api/.env.production.example');
-  const envProdDest = path.resolve(apiDestDir, '.env');
-  if (fs.existsSync(envProdSrc)) {
-    fs.copyFileSync(envProdSrc, envProdDest);
-    console.log('  ✓ api/.env.production.example -> public_html/api/.env');
+  // Verificar se ficou qualquer resíduo Node.js ou dev
+  const forbiddenItems = ['node_modules', 'package-lock.json', 'app.js', 'src', 'tsconfig.json'];
+  for (const item of forbiddenItems) {
+    const checkPath = path.resolve(apiDestDir, item);
+    if (fs.existsSync(checkPath)) {
+      fs.rmSync(checkPath, { recursive: true, force: true });
+    }
   }
 
-  // Sobrescrever schema.prisma com o schema.mysql.prisma para a Hostinger MySQL
-  const mysqlSchemaSrc = path.resolve(rootDir, 'api/prisma/schema.mysql.prisma');
-  const schemaDest = path.resolve(apiDestDir, 'prisma/schema.prisma');
-  if (fs.existsSync(mysqlSchemaSrc)) {
-    fs.copyFileSync(mysqlSchemaSrc, schemaDest);
-    console.log('  ✓ api/prisma/schema.mysql.prisma -> public_html/api/prisma/schema.prisma (MySQL Provider Active)');
-  }
-
+  const totalSize = calculateDirectorySize(publicHtmlDir);
 
   console.log('\n==================================================');
-  console.log('✅ PACOTE DE PRODUÇÃO ESTRUTURADO COM SUCESSO!');
-  console.log(`📁 Pasta Gerada: ${distProdDir}`);
-  console.log('👉 Carregue o conteúdo de dist_production/public_html para o public_html da Hostinger.');
+  console.log('✅ PACOTE DE PRODUÇÃO PHP 8.3 AUTOCONTIDO COM SUCESSO!');
+  console.log(`📁 Pasta Gerada: ${publicHtmlDir}`);
+  console.log(`📊 Tamanho Aproximado: ${formatBytes(totalSize)}`);
   console.log('==================================================\n');
 }
 

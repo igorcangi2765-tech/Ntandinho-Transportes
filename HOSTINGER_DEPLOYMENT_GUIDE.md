@@ -34,15 +34,15 @@ Este comando executa automaticamente:
 
 ## 🛠️ OPÇÃO 1: Hostinger Web Hosting (hPanel / Node.js Web App) - RECOMENDADO
 
-### 1. Criar Base de Dados MySQL na Hostinger
+### 1. Base de Dados MySQL na Hostinger
 1. No **hPanel**, aceda a **Bases de Dados MySQL**.
-2. Crie uma nova base de dados:
-   - **Nome da BD:** `u123456789_ntandinho`
-   - **Utilizador:** `u123456789_user`
-   - **Palavra-passe:** `SuaSenhaSegura2026!`
+2. A sua base de dados já se encontra criada com as seguintes credenciais:
+   - **Nome da BD:** `u178468876_u178468876_Dts`
+   - **Utilizador:** `u178468876_u178468876_log`
+   - **Palavra-passe:** `[A palavra-passe definida por si no hPanel]`
 3. Importe o ficheiro SQL de dados iniciais:
    - Abra o **phpMyAdmin** na Hostinger.
-   - Selecione a base de dados criada e vá ao separador **Importar**.
+   - Selecione a base de dados `u178468876_u178468876_Dts` e vá ao separador **Importar**.
    - Escolha o ficheiro `ntandinho_hostinger_database.sql` (disponível dentro da pasta `dist_production/public_html/api/`).
    - Clique em **Executar**.
 
@@ -60,10 +60,11 @@ Este comando executa automaticamente:
    ```env
    PORT=5000
    NODE_ENV=production
-   JWT_SECRET=sua_chave_jwt_secreta_prod_2026
-   JWT_REFRESH_SECRET=sua_chave_jwt_refresh_secreta_prod_2026
-   DATABASE_URL="mysql://u123456789_user:SuaSenhaSegura2026!@localhost:3306/u123456789_ntandinho"
+   JWT_SECRET=ntandinho_prod_jwt_secret_981273918273981273981273
+   JWT_REFRESH_SECRET=ntandinho_prod_jwt_refresh_secret_019283019283019283
+   DATABASE_URL="mysql://u178468876_u178468876_log:SUA_SENHA_AQUI@localhost:3306/u178468876_u178468876_Dts"
    ```
+
 
 ---
 

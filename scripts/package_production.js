@@ -104,6 +104,15 @@ function buildProductionPackage() {
     console.log('  ✓ api/.env.production.example -> public_html/api/.env');
   }
 
+  // Sobrescrever schema.prisma com o schema.mysql.prisma para a Hostinger MySQL
+  const mysqlSchemaSrc = path.resolve(rootDir, 'api/prisma/schema.mysql.prisma');
+  const schemaDest = path.resolve(apiDestDir, 'prisma/schema.prisma');
+  if (fs.existsSync(mysqlSchemaSrc)) {
+    fs.copyFileSync(mysqlSchemaSrc, schemaDest);
+    console.log('  ✓ api/prisma/schema.mysql.prisma -> public_html/api/prisma/schema.prisma (MySQL Provider Active)');
+  }
+
+
   console.log('\n==================================================');
   console.log('✅ PACOTE DE PRODUÇÃO ESTRUTURADO COM SUCESSO!');
   console.log(`📁 Pasta Gerada: ${distProdDir}`);

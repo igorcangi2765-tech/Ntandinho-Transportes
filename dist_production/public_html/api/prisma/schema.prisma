@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -79,8 +79,8 @@ model Session {
   id           String   @id @default(uuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token        String   @unique
-  refreshToken String   @unique
+  token        String   @unique @db.VarChar(500)
+  refreshToken String   @unique @db.VarChar(500)
   ipAddress    String?
   userAgent    String?
   expiresAt    DateTime
@@ -97,7 +97,7 @@ model AuditLog {
   action    String
   entity    String
   entityId  String?
-  details   String?
+  details   String?  @db.Text
   ipAddress String?
   createdAt DateTime @default(now())
 
@@ -109,7 +109,7 @@ model ActivityLog {
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   action    String
-  details   String?
+  details   String?  @db.Text
   createdAt DateTime @default(now())
 
   @@map("activity_logs")
@@ -228,7 +228,7 @@ model Lead {
   status          String   @default("NOVO")
   customerId      String?
   customer        Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  notes           String?
+  notes           String?  @db.Text
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -248,7 +248,7 @@ model Quotation {
   lead             Lead?     @relation(fields: [leadId], references: [id])
   origin           String
   destination      String
-  cargoDescription String
+  cargoDescription String    @db.Text
   weightKg         Float
   containerSize    String?
   priceSubtotal    Float
@@ -295,7 +295,7 @@ model Booking {
   customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   origin        String
   destination   String
-  cargoDetails  String?
+  cargoDetails  String?   @db.Text
   scheduledDate DateTime
   status        String    @default("PENDENTE")
   totalPrice    Float     @default(0.0)
@@ -379,7 +379,7 @@ model Route {
 
 model Cargo {
   id             String   @id @default(uuid())
-  description    String
+  description    String   @db.Text
   weightKg       Float
   volumeM3       Float?
   containerNo    String?
@@ -405,7 +405,7 @@ model Trip {
   status        String    @default("RASCUNHO")
   departureTime DateTime?
   arrivalTime   DateTime?
-  notes         String?
+  notes         String?   @db.Text
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -450,7 +450,7 @@ model Maintenance {
   id            String    @id @default(uuid())
   vehicleId     String
   vehicle       Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  description   String
+  description   String    @db.Text
   cost          Float
   status        String    @default("AGENDADO")
   scheduledDate DateTime
@@ -525,7 +525,7 @@ model Payment {
   amount        Float
   paymentMethod String   @default("TRANSFERENCIA_BANCARIA")
   referenceNo   String?
-  notes         String?
+  notes         String?  @db.Text
   paidAt        DateTime @default(now())
   createdAt     DateTime @default(now())
 
@@ -571,7 +571,7 @@ model Stock {
   supplier    Supplier?       @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   code        String          @unique
   name        String
-  description String?
+  description String?         @db.Text
   category    String          @default("PECAS")
   quantity    Int             @default(0)
   minQuantity Int             @default(5)
@@ -588,10 +588,10 @@ model StockMovement {
   id          String   @id @default(uuid())
   stockId     String
   stock       Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
-  type        String
+  type        String   // ENTRADA, SAIDA, AJUSTE
   quantity    Int
   reference   String?
-  notes       String?
+  notes       String?  @db.Text
   createdAt   DateTime @default(now())
 
   @@map("stock_movements")
@@ -606,7 +606,7 @@ model Notification {
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
-  message   String
+  message   String   @db.Text
   type      String   @default("INFO")
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -617,7 +617,7 @@ model Notification {
 model Setting {
   id          String   @id @default(uuid())
   key         String   @unique
-  value       String
+  value       String   @db.Text
   description String?
   updatedAt   DateTime @updatedAt
 
@@ -650,8 +650,8 @@ model FailedJob {
   uuid       String   @unique
   connection String
   queue      String
-  payload    String
-  exception  String
+  payload    String   @db.Text
+  exception  String   @db.Text
   failedAt   DateTime @default(now())
 
   @@map("failed_jobs")

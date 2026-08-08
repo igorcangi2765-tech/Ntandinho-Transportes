@@ -1,0 +1,17 @@
+# ====================================================================
+# CONFIGURAÇÃO DA APLICAÇÃO NODE.JS / EXPRESS NO HPANEL HOSTINGER
+# Sub-diretório /api/
+# ====================================================================
+
+<IfModule mod_passenger.c>
+  PassengerEnabled on
+  PassengerAppType node
+  PassengerStartupFile app.js
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ app.js [L]
+</IfModule>

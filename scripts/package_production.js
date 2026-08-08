@@ -85,6 +85,7 @@ function buildProductionPackage() {
     'ntandinho_hostinger_database.sql',
     'dist',
     'prisma',
+    '.htaccess',
   ];
 
   for (const item of apiItemsToCopy) {

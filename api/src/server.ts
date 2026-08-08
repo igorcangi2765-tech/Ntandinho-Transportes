@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
 import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
 import publicRoutes from './routes/public.routes';
 import adminRoutes from './routes/admin.routes';
 import crmRoutes from './routes/crm.routes';
@@ -15,28 +16,58 @@ import { seedDatabase } from './seed';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const prisma = new PrismaClient();
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
+const HOST = '0.0.0.0';
 
 // Middlewares de Segurança, CORS e Logging
 app.use(helmet({ contentSecurityPolicy: false }));
+
+const allowedOrigins = [
+  'https://ntandinho.zyphtech.com',
+  'http://ntandinho.zyphtech.com',
+  'http://localhost:5173',
+  'http://localhost:5000',
+  'http://localhost:3000',
+];
+
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// ROTA DE HEALTHCHECK GLOBAL (Requisito 10 e 11)
+// ROTA DE HEALTHCHECK GLOBAL COM VERIFICAÇÃO REAL DE BASE DE DADOS (ETAPA 8)
 app.get(['/api/health', '/health', '/api/public/health'], async (req: Request, res: Response) => {
-  return res.json({
-    status: 'ok',
-    database: 'connected',
-    server: 'running',
-    timestamp: new Date().toISOString(),
-  });
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return res.json({
+      status: 'ok',
+      server: 'running',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error('[HEALTHCHECK DB ERROR]', err.message || err);
+    return res.status(500).json({
+      status: 'error',
+      server: 'running',
+      database: 'disconnected',
+      error: err.message || 'Falha na ligação à base de dados MySQL.',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // ROTAS DA API (Aceita com prefixo /api e sem prefixo se o Hostinger stripper)
@@ -47,7 +78,7 @@ app.use(['/api/admin/fleet', '/fleet'], fleetRoutes);
 app.use(['/api/admin/finance', '/finance'], financeRoutes);
 app.use(['/api/admin/analytics', '/analytics'], analyticsRoutes);
 
-// Fallback de 404 Exclusivo para a API - NUNCA RETORNAR HTML PARA NENHUM ENDPOINT /api/*
+// Fallback de 404 Exclusivo para a API - NUNCA RETORNAR HTML PARA NENHUM ENDPOINT /api/* (ETAPA 13)
 app.use(['/api/*', '/api'], (req: Request, res: Response) => {
   return res.status(404).json({
     success: false,
@@ -92,15 +123,16 @@ app.get(['/admin', '/admin/*'], (req: Request, res: Response) => {
 const rootSitePath = path.resolve(__dirname, '../../');
 app.use(express.static(rootSitePath, { index: 'index.html' }));
 
-app.listen(PORT, async () => {
-  // Garantir que a base de dados tem o utilizador administrador semeado
-  await seedDatabase().catch(console.error);
+app.listen(PORT, HOST, async () => {
+  // Garantir que a base de dados tem o utilizador administrador semeado se necessário
+  await seedDatabase().catch((err) => console.error('[SEED DB NOTICE]', err.message));
 
   console.log(`=================================================`);
-  console.log(`🚀 N' Tandinho Server & API Ativo na Porta: ${PORT}`);
-  console.log(`🌐 Site Público: http://localhost:${PORT}/`);
-  console.log(`🖥️  Painel Admin: http://localhost:${PORT}/admin`);
-  console.log(`📍 API Health:   http://localhost:${PORT}/api/health`);
-  console.log(`🔒 API Admin:    http://localhost:${PORT}/api/admin/auth/login`);
+  console.log(`🚀 N' Tandinho Server & API Ativo em ${HOST}:${PORT}`);
+  console.log(`🌐 Site Público: http://${HOST}:${PORT}/`);
+  console.log(`🖥️  Painel Admin: http://${HOST}:${PORT}/admin`);
+  console.log(`📍 API Health:   http://${HOST}:${PORT}/api/health`);
+  console.log(`🔒 API Admin:    http://${HOST}:${PORT}/api/admin/auth/login`);
   console.log(`=================================================`);
 });
+

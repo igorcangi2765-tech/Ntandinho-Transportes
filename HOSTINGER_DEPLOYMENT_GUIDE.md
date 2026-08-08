@@ -53,13 +53,22 @@ Este comando executa automaticamente:
 1. Abra o **Gerenciador de Arquivos (File Manager)** no **hPanel** da Hostinger.
 2. Navegue até à pasta `public_html/`.
 3. Envie todo o **conteúdo** que se encontra dentro da pasta local `dist_production/public_html/` para a pasta `public_html/` do servidor.
-4. Confirme a estrutura no servidor:
+4. **IMPORTANTE:** Edite o ficheiro `public_html/api/.env` na Hostinger e coloque a palavra-passe real do seu MySQL:
+   ```env
+   DB_HOST=localhost
+   DB_NAME=u178468876_u178468876_Dts
+   DB_USER=u178468876_u178468876_log
+   DB_PASS=SUA_SENHA_REAL_DA_HOSTINGER
+   DATABASE_URL="mysql://u178468876_u178468876_log:SUA_SENHA_REAL_DA_HOSTINGER@localhost:3306/u178468876_u178468876_Dts"
+   ```
+5. Confirme a estrutura no servidor:
    - `public_html/index.html`
    - `public_html/.htaccess`
    - `public_html/admin/index.html`
    - `public_html/admin/.htaccess`
    - `public_html/api/index.php`
    - `public_html/api/.htaccess`
+   - `public_html/api/.env` (com a palavra-passe correta da Hostinger)
    - `public_html/api/config/database.php`
 
 ---

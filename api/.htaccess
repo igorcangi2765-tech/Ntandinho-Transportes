@@ -8,7 +8,13 @@
     PassengerEnabled off
 </IfModule>
 
-# 2. Definir index.php como o único ficheiro de índice do diretório API
+# 2. Bloquear acesso HTTP direto a ficheiros sensíveis (.env, .sql, .git, etc.)
+<FilesMatch "^\.env|\.sql|\.git">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 3. Definir index.php como o único ficheiro de índice do diretório API
 DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>

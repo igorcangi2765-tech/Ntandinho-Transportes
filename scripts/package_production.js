@@ -105,6 +105,8 @@ function buildProductionPackage() {
     'index.php',
     'health.php',
     '.htaccess',
+    '.env',
+    '.env.production.example',
     'config',
     'middleware',
     'helpers',

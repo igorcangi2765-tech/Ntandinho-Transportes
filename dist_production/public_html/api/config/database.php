@@ -14,7 +14,7 @@ class Database {
             $port = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306';
             $dbname = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'u178468876_u178468876_Dts';
             $user = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'u178468876_u178468876_log';
-            $pass = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: '';
+            $pass = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: 'Adm0001';
 
             // Tenta obter credenciais de ficheiro .env se existente
             $envPath = __DIR__ . '/../.env';
@@ -36,6 +36,16 @@ class Database {
                                 $pass = urldecode($parsed['pass'] ?? $pass);
                                 $dbname = ltrim($parsed['path'] ?? $dbname, '/');
                             }
+                        } elseif ($name === 'DB_HOST' && !empty($val)) {
+                            $host = $val;
+                        } elseif ($name === 'DB_PORT' && !empty($val)) {
+                            $port = $val;
+                        } elseif ($name === 'DB_NAME' && !empty($val)) {
+                            $dbname = $val;
+                        } elseif ($name === 'DB_USER' && !empty($val)) {
+                            $user = $val;
+                        } elseif ($name === 'DB_PASS') {
+                            $pass = $val;
                         }
                     }
                 }
@@ -54,7 +64,7 @@ class Database {
                 self::$instance = new PDO($dsn, $user, $pass, $options);
             } catch (PDOException $e) {
                 // Não expor a palavra-passe em erros de ligação
-                throw new PDOException("Falha na ligação à base de dados MySQL: " . $e->getMessage(), (int)$e->getCode());
+                throw new PDOException("Falha na ligação à base de dados MySQL (Utilizador: '{$user}', BD: '{$dbname}', Host: '{$host}'): " . $e->getMessage(), (int)$e->getCode());
             }
         }
 

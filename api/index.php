@@ -21,7 +21,7 @@ set_exception_handler(function (Throwable $e) {
     jsonResponse([
         'success'   => false,
         'endpoint'  => $_SERVER['REQUEST_URI'] ?? '/api',
-        'error'     => 'Erro interno no servidor API PHP.',
+        'error'     => 'Erro interno no servidor API PHP: ' . $e->getMessage(),
         'details'   => $e->getMessage(),
         'timestamp' => date('c'),
     ], 500);

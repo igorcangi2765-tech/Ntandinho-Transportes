@@ -31,9 +31,9 @@ function handleLogin(): void {
         ]);
     }
 
-    $db = Database::getConnection();
-
     try {
+        $db = Database::getConnection();
+
         $stmt = $db->prepare("
             SELECT u.*, r.name as role_name
             FROM users u
@@ -159,7 +159,7 @@ function handleLogin(): void {
             ]
         ], 200);
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         jsonError("Erro interno durante a verificação de login: " . $e->getMessage(), 500);
     }
 }

@@ -20,8 +20,7 @@ function handleCors(): void {
     if (in_array($origin, $allowedOrigins, true)) {
         header("Access-Control-Allow-Origin: {$origin}");
     } else {
-        // Permitir origem se for do mesmo domínio ou wildcard controlado em produção
-        header("Access-Control-Allow-Origin: " . ($origin ?: '*'));
+        header("Access-Control-Allow-Origin: https://ntandinho.zyphtech.com");
     }
 
     header("Access-Control-Allow-Credentials: true");

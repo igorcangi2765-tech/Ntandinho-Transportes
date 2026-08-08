@@ -47,22 +47,8 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function printDirectoryTree(dirPath, prefix = '') {
-  if (!fs.existsSync(dirPath)) return;
-  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-  entries.forEach((entry, index) => {
-    const isLast = index === entries.length - 1;
-    const marker = isLast ? '└── ' : '├── ';
-    console.log(`${prefix}${marker}${entry.name}${entry.isDirectory() ? '/' : ''}`);
-    if (entry.isDirectory()) {
-      const newPrefix = prefix + (isLast ? '    ' : '│   ');
-      printDirectoryTree(path.join(dirPath, entry.name), newPrefix);
-    }
-  });
-}
-
 function buildProductionPackage() {
-  console.log('📦 A iniciar o empacotamento limpo para a Hostinger (PHP 8.3 + React SPA)...');
+  console.log('📦 A iniciar o empacotamento 100% PHP 8.3 Nativo para a Hostinger...');
 
   // 1. Limpar diretório dist_production anterior se existir
   if (fs.existsSync(distProdDir)) {
@@ -113,7 +99,7 @@ function buildProductionPackage() {
     console.log('  ✓ admin/public/.htaccess -> public_html/admin/.htaccess');
   }
 
-  // 4. Copiar API PHP 8.3 Nativa para public_html/api
+  // 4. Copiar Exclusivamente Ficheiros PHP e Estrutura Nativas para public_html/api
   console.log('🔒 A copiar Backend API PHP 8.3 Nativa para public_html/api...');
   const apiPhpItemsToCopy = [
     'index.php',
@@ -146,24 +132,25 @@ function buildProductionPackage() {
     const srcPath = path.resolve(rootDir, 'api', item);
     const destPath = path.resolve(apiDestDir, item);
     if (fs.existsSync(srcPath)) {
-      copyRecursive(srcPath, destPath, ['node_modules', 'dist', 'src', 'package.json', 'package-lock.json', 'app.js', 'dev.db', 'prisma', 'tsconfig.json']);
+      copyRecursive(srcPath, destPath, ['node_modules', 'dist', 'src', 'package.json', 'package-lock.json', 'app.js', 'server.js', 'dev.db', 'prisma', 'tsconfig.json']);
       console.log(`  ✓ api/${item}`);
     }
   }
 
-  // Verificar se ficou qualquer resíduo Node.js ou dev
-  const forbiddenItems = ['node_modules', 'package-lock.json', 'app.js', 'src', 'tsconfig.json'];
-  for (const item of forbiddenItems) {
+  // Sanidade final: Garantir que NENHUM ficheiro .js, app.js ou dist existe dentro de public_html/api
+  const forbiddenNames = ['app.js', 'server.js', 'index.js', 'package.json', 'package-lock.json', 'node_modules', 'dist', 'src'];
+  for (const item of forbiddenNames) {
     const checkPath = path.resolve(apiDestDir, item);
     if (fs.existsSync(checkPath)) {
       fs.rmSync(checkPath, { recursive: true, force: true });
+      console.log(`  🧹 Removido resíduo Node.js: api/${item}`);
     }
   }
 
   const totalSize = calculateDirectorySize(publicHtmlDir);
 
   console.log('\n==================================================');
-  console.log('✅ PACOTE DE PRODUÇÃO PHP 8.3 AUTOCONTIDO COM SUCESSO!');
+  console.log('✅ PACOTE DE PRODUÇÃO PHP 8.3 ESTRUTURADO COM SUCESSO!');
   console.log(`📁 Pasta Gerada: ${publicHtmlDir}`);
   console.log(`📊 Tamanho Aproximado: ${formatBytes(totalSize)}`);
   console.log('==================================================\n');

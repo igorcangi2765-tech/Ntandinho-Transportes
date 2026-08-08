@@ -3,28 +3,34 @@
 # Website N' Tandinho Transportes S.A. + Painel ERP Admin + PHP 8.3 API
 # ====================================================================
 
+# 1. Desativar Phusion Passenger / Node.js no domínio (API é PHP 8.3 nativa)
+<IfModule mod_passenger.c>
+    PassengerEnabled off
+</IfModule>
+
+DirectoryIndex index.html index.php
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # 1. Redirecionar HTTP para HTTPS (Hostinger SSL)
+  # 2. Redirecionar HTTP para HTTPS (Hostinger SSL)
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # 2. ROTEAMENTO DA API PHP 8.3 (/api e /api/*) - REDIRECIONAR PARA api/index.php
-  RewriteCond %{REQUEST_URI} ^/api(/.*)?$ [NC]
-  RewriteCond %{REQUEST_FILENAME} !-f
+  # 3. ROTEAMENTO DA API PHP 8.3 (/api e /api/*) - FORÇAR PARA api/index.php
+  # Todas as requisições sob /api e /api/* são entregues diretamente ao PHP index.php
   RewriteRule ^api(/.*)?$ api/index.php [QSA,L]
 
-  # 3. Ignorar ficheiros e diretórios reais existentes (imagens, css, js, uploads)
+  # 4. Ignorar ficheiros e diretórios reais existentes (imagens, css, js, uploads)
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # 4. Roteamento do Painel Admin ERP (/admin e /admin/*) para /admin/index.html
+  # 5. Roteamento do Painel Admin ERP (/admin e /admin/*) para /admin/index.html
   RewriteRule ^admin(/.*)?$ /admin/index.html [L]
 
-  # 5. Fallback do Site Público para index.html
+  # 6. Fallback do Site Público para index.html
   RewriteRule ^index\.html$ - [L]
   RewriteRule . /index.html [L]
 </IfModule>

@@ -3,6 +3,14 @@
 # ERP N'Tandinho Transportes S.A.
 # ====================================================================
 
+# 1. Desativar Phusion Passenger / Node.js da Hostinger se tiver sido ativado no hPanel
+<IfModule mod_passenger.c>
+    PassengerEnabled off
+</IfModule>
+
+# 2. Definir index.php como o único ficheiro de índice do diretório API
+DirectoryIndex index.php
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /api/
@@ -11,8 +19,6 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Se o ficheiro ou diretório não existir fisicamente, direciona tudo para index.php
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # Encaminhar TODAS as requisições /api/* incondicionalmente para index.php
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>

@@ -14,7 +14,7 @@ class Database {
             $port = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306';
             $dbname = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'u178468876_u178468876_Dts';
             $user = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'u178468876_u178468876_log';
-            $pass = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: 'Adm0001';
+            $pass = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: 'Ntandinho#DB2026!';
 
             // Tenta obter credenciais de ficheiro .env se existente
             $envPath = __DIR__ . '/../.env';

@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+  }
+
+  html, body, #root {
+    @apply bg-[#020817] text-slate-100 antialiased font-sans max-w-full overflow-x-hidden w-full min-h-screen;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overflow-x: hidden !important;
+  }
+}
+
+/* Custom Scrollbar - Vertical only, 0px height horizontal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 0px !important;
+}
+
+::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0px !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+::-webkit-scrollbar-track {
+  background: #020817;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Global Standardized Fluid Layout Tokens - 100% Full Width across all breakpoints */
+.app-main-container {
+  @apply flex-1 pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8 min-h-screen transition-all duration-300 min-w-0 max-w-full overflow-x-hidden;
+}
+
+.app-content-wrapper {
+  @apply w-full space-y-5 sm:space-y-6 min-w-0 max-w-full overflow-x-hidden;
+}
+
+/* Stripe Card Style - Standardized Device Padding Token (Mobile p-4, Tablet p-5, Desktop p-6) */
+.stripe-card {
+  @apply bg-[#0F172A] border border-slate-800/80 rounded-2xl shadow-lg shadow-black/20 hover:border-slate-700/80 transition-all duration-200 p-4 sm:p-5 lg:p-6 max-w-full overflow-hidden w-full;
+}
+
+/* Status Badge - Single-line guaranteed, flex-centered */
+.stripe-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: max-content;
+  padding: 4px 10px;
+  line-height: 1;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+}
+
+/* Search Input with Proper Left Padding for Icon Clearance */
+.stripe-input {
+  @apply bg-[#1E293B]/80 border border-slate-700/70 text-slate-100 placeholder-slate-400 text-xs sm:text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#F5A300] focus:border-transparent transition-all;
+}
+
+.stripe-button-primary {
+  @apply bg-[#F5A300] hover:bg-[#E59200] text-slate-950 font-semibold px-4 py-2 rounded-lg text-sm transition-all shadow-md hover:shadow-orange-500/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap;
+}
+
+.stripe-button-secondary {
+  @apply bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-4 py-2 rounded-lg text-sm border border-slate-700/80 transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap;
+}
+
+.stripe-button-danger {
+  @apply bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-medium px-3 py-1.5 rounded-lg text-xs transition-all inline-flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap;
+}

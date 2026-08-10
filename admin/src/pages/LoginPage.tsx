@@ -67,8 +67,8 @@ export const LoginPage: React.FC = () => {
       if (data && data.user && data.tokens) {
         login(data.user, data.tokens.accessToken);
         addToast('Acesso Concedido', `Bem-vindo de volta, ${data.user.name}!`, 'success');
-        console.log('[LOGIN PAGE] Autenticação bem-sucedida. Redirecionando para /admin/dashboard...');
-        navigate('/dashboard');
+        console.log('[LOGIN PAGE] Autenticação bem-sucedida. Redirecionando para o Dashboard...');
+        navigate('/');
       } else {
         const failureMsg = 'Credenciais de acesso incorretas. Por favor verifique o seu e-mail e palavra-passe.';
         console.error('[LOGIN PAGE FAIL]', failureMsg);

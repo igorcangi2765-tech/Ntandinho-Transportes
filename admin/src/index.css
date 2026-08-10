@@ -1,50 +1,301 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   FASE 1 — DESIGN SYSTEM GLOBAL N'TANDINHO TRANSPORTES S.A.
+   Tokens Institucionais Oficiais (Light Mode & Dark Mode)
+   ========================================================================== */
+
+:root {
+  /* Core Palette Tokens */
+  --primary: #F6A823;
+  --primary-hover: #D08500;
+  --primary-soft: rgba(246, 168, 35, 0.15);
+
+  --navy: #0B132B;
+  --navy-dark: #070D1F;
+  --blue: #16223B;
+  --blue-support: #1E3A8A;
+
+  /* Semantics */
+  --success: #16A34A;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #0EA5E9;
+
+  /* Light Mode Design System Tokens */
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-hover: #F1F5F9;
+  --border: #CBD5E1;
+
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+
+  color-scheme: light;
+}
+
+html.dark {
+  /* Dark Mode Design System Tokens */
+  --background: #0B132B;
+  --surface: #111D33;
+  --surface-hover: #16223B;
+  --border: #1C2A48;
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+
+  color-scheme: dark;
+}
+
 @layer base {
   body {
-    @apply bg-navy-950 text-slate-100 antialiased font-sans;
+    background-color: var(--background);
+    color: var(--text-primary);
+    @apply antialiased font-sans transition-colors duration-200;
   }
 
-  ::selection {
-    background-color: #F29900;
-    color: #020617;
-  }
-
-  h1, h2, h3, .font-heading {
+  h1, h2, h3, h4, .font-heading {
     font-family: 'Space Grotesk', var(--font-sans);
   }
 }
 
-/* Custom Scrollbars */
+/* ==========================================================================
+   FASE 2 — LIGHT MODE ACCESSIBILITY & HIGH CONTRAST PALETTE
+   Ensures 100% crystal-clear readability for light mode elements
+   ========================================================================== */
+
+html:not(.dark) body {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+/* Light mode slate text contrast elevation */
+html:not(.dark) :is(.text-slate-900, .text-slate-800) {
+  color: #0F172A !important;
+}
+
+html:not(.dark) :is(.text-slate-700, .text-slate-600) {
+  color: #1E293B !important;
+}
+
+html:not(.dark) :is(.text-slate-500) {
+  color: #334155 !important;
+}
+
+html:not(.dark) :is(.text-slate-400) {
+  color: #475569 !important;
+}
+
+/* Light mode borders & dividers */
+html:not(.dark) :is(.border-slate-100, .border-slate-200) {
+  border-color: #E2E8F0 !important;
+}
+
+html:not(.dark) :is(.border-slate-300) {
+  border-color: #CBD5E1 !important;
+}
+
+/* Light mode table headers & rows */
+html:not(.dark) table thead tr {
+  background-color: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+}
+
+html:not(.dark) table th {
+  color: #1E293B !important;
+  font-weight: 800 !important;
+}
+
+html:not(.dark) table tbody tr {
+  border-color: #E2E8F0 !important;
+}
+
+html:not(.dark) table tbody tr:hover {
+  background-color: #F8FAFC !important;
+}
+
+html:not(.dark) table td {
+  color: #0F172A !important;
+}
+
+/* Light mode form controls */
+html:not(.dark) :is(input, select, textarea) {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+html:not(.dark) :is(input, select, textarea)::placeholder {
+  color: #64748B !important;
+}
+
+html:not(.dark) option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+
+/* ==========================================================================
+   FASE 3 — DARK MODE ACCESSIBILITY & HIGH CONTRAST PALETTE
+   Ensures 100% crystal-clear readability for dark mode elements
+   ========================================================================== */
+
+html.dark body {
+  background-color: #0B132B;
+  color: #F8FAFC;
+}
+
+/* Slate text contrast fixes in Dark Mode */
+html.dark :is(.text-slate-900, .text-slate-800, .text-slate-700) {
+  color: #F8FAFC !important;
+}
+
+html.dark :is(.text-slate-600, .text-slate-500) {
+  color: #CBD5E1 !important;
+}
+
+html.dark :is(.text-slate-400) {
+  color: #94A3B8 !important;
+}
+
+/* Preserve status and accent text colors in Dark Mode */
+html.dark :is(.text-emerald-600, .text-emerald-700, .text-emerald-400) {
+  color: #34D399 !important;
+}
+html.dark :is(.text-amber-600, .text-amber-700, .text-amber-400) {
+  color: #FBBF24 !important;
+}
+html.dark :is(.text-rose-600, .text-rose-700, .text-rose-400) {
+  color: #F87171 !important;
+}
+html.dark :is(.text-sky-600, .text-sky-700, .text-sky-400) {
+  color: #38BDF8 !important;
+}
+html.dark :is(.text-blue-600, .text-blue-700, .text-blue-400) {
+  color: #60A5FA !important;
+}
+html.dark :is(.text-brand-orange, .text-primary) {
+  color: #F6A823 !important;
+}
+
+/* Dark mode card, table and modal surfaces */
+html.dark .bg-white {
+  background-color: #111D33 !important;
+}
+
+html.dark :is(.bg-slate-50, .bg-slate-100, .bg-slate-50\/50, .bg-slate-100\/70, .bg-slate-100\/50) {
+  background-color: #16223B !important;
+}
+
+html.dark :is(.border-slate-100, .border-slate-200, .border-slate-300, .border-slate-200\/70) {
+  border-color: #1C2A48 !important;
+}
+
+/* Table headers & cells in Dark Mode */
+html.dark table thead tr {
+  background-color: #16223B !important;
+  border-color: #1C2A48 !important;
+}
+
+html.dark table th {
+  color: #CBD5E1 !important;
+}
+
+html.dark table tbody tr {
+  border-color: #1C2A48 !important;
+}
+
+html.dark table tbody tr:hover {
+  background-color: #16223B !important;
+}
+
+html.dark table td {
+  color: #F8FAFC !important;
+}
+
+/* Form controls in Dark Mode */
+html.dark :is(input, select, textarea) {
+  background-color: #0B132B !important;
+  color: #F8FAFC !important;
+  border-color: #1C2A48 !important;
+}
+
+html.dark :is(input, select, textarea)::placeholder {
+  color: #64748B !important;
+}
+
+html.dark option {
+  background-color: #111D33 !important;
+  color: #F8FAFC !important;
+}
+
+/* Focus Ring Best Practices for Accessibility */
+:is(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid #F6A823 !important;
+  outline-offset: 2px !important;
+}
+
+/* Custom Scrollbars consuming Design System Tokens */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--border);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #F29900;
+  background: var(--primary);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
 
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+@layer components {
+  /* Global Card & Table Utilities consuming Design Tokens */
+  .erp-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    @apply rounded-2xl transition-all duration-200;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .erp-card:hover {
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  }
+
+  .erp-table-header {
+    background-color: var(--surface-hover);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    @apply text-[11px] font-extrabold uppercase tracking-wider;
+  }
+}
+
+/* Micro-interactions & animations */
+@layer utilities {
+  .btn-micro {
+    @apply transition-all duration-200 cursor-pointer active:scale-[0.98] touch-manipulation hover:-translate-y-0.5 hover:shadow-md;
+  }
+  
+  .card-micro {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md;
+  }
+
+  .row-micro {
+    @apply transition-colors duration-150 hover:bg-slate-50/80 dark:hover:bg-slate-800/60;
+  }
 }

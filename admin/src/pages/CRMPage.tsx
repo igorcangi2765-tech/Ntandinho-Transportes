@@ -1,287 +1,883 @@
-import React, { useState } from 'react';
-import { Building2, Plus, Mail, Phone, FileText, CheckCircle2, Eye, Receipt } from 'lucide-react';
-import { PageHeader } from '../shared/layouts/PageHeader';
-import { FilamentTable, FilamentColumn, FilamentFilter } from '../shared/components/ui/FilamentTable';
-import { SlideOverDrawer } from '../shared/components/ui/SlideOverDrawer';
-import { RowActionsDropdown } from '../shared/components/ui/RowActionsDropdown';
-import { NewCustomerModal } from '../components/crm/NewCustomerModal';
-import { CustomerHistoryModal } from '../components/crm/CustomerHistoryModal';
-import { QuotationForm } from '../components/crm/QuotationForm';
-import { CustomerItem, useErpStore } from '../shared/stores/useErpStore';
-import { useNotificationStore } from '../shared/stores/useNotificationStore';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useErpStore, CustomerItem, QuotationItem } from '../shared/stores/useErpStore';
+import { useNotificationStore } from '../stores/useNotificationStore';
+import { StandardPageLayout } from '../components/ui/StandardPageLayout';
+import { MetricCard } from '../components/ui/MetricCard';
+import { DataTable, Column } from '../components/ui/DataTable';
+import { DetailDrawer } from '../components/ui/DetailDrawer';
+import { Modal } from '../components/ui/Modal';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { QuotationsFunnel } from '../components/ui/QuotationsFunnel';
+import {
+  Building2,
+  Plus,
+  Users,
+  CreditCard,
+  DollarSign,
+  Download,
+  Printer,
+  FileSpreadsheet,
+  Columns,
+  List,
+  ArrowRight,
+} from 'lucide-react';
+import { exportToCSV } from '../utils/csvExporter';
+import { printGeneralReport } from '../utils/documentPrinter';
 
 export const CRMPage: React.FC = () => {
-  const { customers, quotations, convertQuotationToInvoice } = useErpStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    customers,
+    quotations,
+    bookings,
+    trips,
+    invoices,
+    payments,
+    addCustomer,
+    deleteCustomer,
+    addQuotation,
+    updateQuotationStatus,
+    convertQuotationToBooking,
+  } = useErpStore();
   const { addToast } = useNotificationStore();
 
   const [activeTab, setActiveTab] = useState<'customers' | 'quotations'>('customers');
-  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
-  const [showQuotationFormModal, setShowQuotationFormModal] = useState(false);
-  const [selectedHistoryCustomer, setSelectedHistoryCustomer] = useState<CustomerItem | null>(null);
-  const [drawerCustomer, setDrawerCustomer] = useState<CustomerItem | null>(null);
+  const [quotationView, setQuotationView] = useState<'funnel' | 'list'>('list');
 
-  const handleExportCsv = () => {
-    addToast('Exportar Clientes', 'Carteira corporativa de clientes exportada para CSV com sucesso!', 'success');
+  const tabParam = searchParams.get('tab');
+  useEffect(() => {
+    if (tabParam === 'quotations' || tabParam === 'cotacoes') {
+      setActiveTab('quotations');
+    } else {
+      setActiveTab('customers');
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tab: 'customers' | 'quotations') => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
   };
 
-  // Hybrid 2-Line Grouped Columns
-  const customerColumns: FilamentColumn<CustomerItem>[] = [
+  const [selectedCustomerDrawer, setSelectedCustomerDrawer] = useState<CustomerItem | null>(null);
+  const [selectedQuotationDrawer, setSelectedQuotationDrawer] = useState<QuotationItem | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddQuotationOpen, setIsAddQuotationOpen] = useState(false);
+  const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
+
+  // Customer Form State
+  const [name, setName] = useState('');
+  const [nuit, setNuit] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('+258 84 ');
+  const [address] = useState('');
+  const [city] = useState('Maputo');
+  const [isCorporate, setIsCorporate] = useState(true);
+
+  // Quotation Form State
+  const [qCustName, setQCustName] = useState('Cervejas de Moçambique');
+  const [qOrigCity, setQOrigCity] = useState('Maputo');
+  const [qDestCity, setQDestCity] = useState('Beira');
+  const [qCargoDesc, setQCargoDesc] = useState('Mercadorias em paletes');
+  const [qTotalPrice, setQTotalPrice] = useState(125000);
+
+  // Computations
+  const totalCorporateCount = customers.filter((c) => c.isCorporate).length;
+  const totalParticularCount = customers.filter((c) => !c.isCorporate).length;
+  const totalRevenueMzn = customers.reduce((acc, c) => acc + c.totalSpentMzn, 0);
+  const totalCreditLimitMzn = customers.reduce((acc, c) => acc + c.creditLimitMzn, 0);
+
+  // Table Columns for Customers
+  const customerColumns: Column<CustomerItem>[] = [
     {
       key: 'name',
-      header: 'Cliente & NUIT',
-      sortable: true,
-      render: (item) => (
-        <div className="space-y-0.5">
-          <span className="font-bold text-white text-xs block truncate">{item.name}</span>
-          <span className="text-[11px] text-slate-400 font-mono flex items-center gap-2">
-            <span className="text-brand-orange font-bold">NUIT: {item.nuit}</span>
-            <span className="text-slate-600">•</span>
-            <span>{item.id}</span>
-          </span>
+      header: 'Cliente / Razão Social',
+      accessor: (row) => (
+        <div>
+          <span className="font-bold text-slate-900 dark:text-white block">{row.name}</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{row.city} • {row.email}</span>
         </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'nuit',
+      header: 'NUIT',
+      accessor: (row) => <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{row.nuit}</span>,
+      sortable: true,
+    },
+    {
+      key: 'type',
+      header: 'Tipo de Cliente',
+      accessor: (row) => (
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+            row.isCorporate
+              ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30'
+              : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+          }`}
+        >
+          {row.isCorporate ? 'EMPRESA' : 'PARTICULAR'}
+        </span>
       ),
     },
     {
-      key: 'email',
-      header: 'Contactos Diretos',
-      render: (item) => (
-        <div className="text-xs space-y-0.5">
-          <span className="text-slate-300 flex items-center gap-1.5 truncate">
-            <Mail size={12} className="text-brand-orange shrink-0" /> {item.email}
-          </span>
-          <span className="text-slate-400 flex items-center gap-1.5 font-mono text-[11px]">
-            <Phone size={12} className="text-slate-500 shrink-0" /> {item.phone}
-          </span>
-        </div>
-      ),
+      key: 'phone',
+      header: 'Telemóvel',
+      accessor: (row) => <span className="font-mono text-slate-700 dark:text-slate-300 font-medium">{row.phone}</span>,
     },
     {
-      key: 'status',
-      header: 'Tipo & Estado',
-      sortable: true,
-      render: (item) => (
-        <div className="space-y-1">
-          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-semibold text-[10px] border border-slate-700 block w-fit">
-            {item.isCorporate ? 'Pessoa Coletiva' : 'Pessoa Singular'}
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20 inline-flex items-center gap-1">
-            <CheckCircle2 size={11} /> {item.status}
-          </span>
-        </div>
+      key: 'creditLimitMzn',
+      header: 'Limite de Crédito',
+      accessor: (row) => (
+        <span className="font-mono font-bold text-sky-700 dark:text-sky-400">
+          {row.creditLimitMzn.toLocaleString('pt-MZ')} MZN
+        </span>
       ),
+      align: 'right',
+    },
+    {
+      key: 'totalSpentMzn',
+      header: 'Total Faturado',
+      accessor: (row) => (
+        <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
+          {row.totalSpentMzn.toLocaleString('pt-MZ')} MZN
+        </span>
+      ),
+      sortable: true,
+      align: 'right',
     },
   ];
 
-  const customerFilters: FilamentFilter[] = [
+  // Table Columns for Quotations
+  const quotationColumns: Column<QuotationItem>[] = [
+    {
+      key: 'quotationNumber',
+      header: 'Ref. Cotação',
+      accessor: (row) => <span className="font-mono font-bold text-[#F6A823]">{row.quotationNumber}</span>,
+      sortable: true,
+    },
+    {
+      key: 'customerName',
+      header: 'Cliente Solicitante',
+      accessor: (row) => (
+        <div>
+          <span className="font-bold text-slate-900 dark:text-white block">{row.customerName}</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{row.cargoDescription}</span>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'route',
+      header: 'Rota Solicitada',
+      accessor: (row) => (
+        <span className="font-medium text-slate-700 dark:text-slate-300">
+          {row.origin} ➔ {row.destination}
+        </span>
+      ),
+    },
+    {
+      key: 'totalPrice',
+      header: 'Orçamento Total',
+      accessor: (row) => (
+        <span className="font-mono font-black text-slate-900 dark:text-white">
+          {row.totalPrice.toLocaleString('pt-MZ')} MZN
+        </span>
+      ),
+      sortable: true,
+      align: 'right',
+    },
+    {
+      key: 'validUntil',
+      header: 'Validade',
+      accessor: (row) => <span className="font-mono text-slate-500 dark:text-slate-400">{row.validUntil}</span>,
+    },
     {
       key: 'status',
-      label: 'Estado do Cliente',
-      options: [
-        { label: 'Ativos', value: 'ATIVO' },
-        { label: 'Inativos', value: 'INATIVO' },
-      ],
+      header: 'Estado',
+      isStatus: true,
     },
   ];
+
+  const handleCreateCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name) return;
+    addCustomer({
+      name,
+      nuit,
+      email,
+      phone,
+      address,
+      city,
+      isCorporate,
+      creditLimitMzn: isCorporate ? 5000000 : 200000,
+    });
+    addToast('Cliente Cadastrado com Sucesso', `O cliente ${name} foi registado na base de dados comercial.`, 'success');
+    setIsAddModalOpen(false);
+    setName('');
+    setNuit('');
+    setEmail('');
+  };
+
+  const handleCreateQuotationSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const priceSubtotal = Math.round(Number(qTotalPrice) / 1.16);
+    addQuotation({
+      customerId: `cli-${Date.now()}`,
+      customerName: qCustName,
+      origin: qOrigCity,
+      destination: qDestCity,
+      cargoDescription: qCargoDesc,
+      weightKg: 20000,
+      priceSubtotal,
+      currency: 'MZN',
+      validUntil: new Date(Date.now() + 86400000 * 14).toISOString().slice(0, 10),
+    });
+    setIsAddQuotationOpen(false);
+  };
+
+  const handleExportCSV = () => {
+    if (activeTab === 'customers') {
+      const headers = ['Cliente', 'NUIT', 'Tipo', 'Telemóvel', 'Limite Crédito', 'Total Faturado'];
+      const rows = customers.map((c) => [c.name, c.nuit, c.isCorporate ? 'EMPRESA' : 'PARTICULAR', c.phone, `${c.creditLimitMzn} MZN`, `${c.totalSpentMzn} MZN`]);
+      exportToCSV('clientes_crm_ntandinho', headers, rows);
+    } else {
+      const headers = ['Ref. Cotação', 'Cliente Solicitante', 'Origem', 'Destino', 'Orçamento Total', 'Validade', 'Estado'];
+      const rows = quotations.map((q) => [q.quotationNumber, q.customerName, q.origin, q.destination, `${q.totalPrice} MZN`, q.validUntil, q.status]);
+      exportToCSV('cotacoes_comercial_ntandinho', headers, rows);
+    }
+    addToast('Ficheiro CSV Gerado', 'Dados comerciais exportados.', 'success');
+  };
+
+  const handlePrintReport = () => {
+    if (activeTab === 'customers') {
+      const headers = ['Cliente', 'NUIT', 'Tipo de Cliente', 'Telemóvel', 'Total Faturado'];
+      const rows = customers.map((c) => [c.name, c.nuit, c.isCorporate ? 'EMPRESA' : 'PARTICULAR', c.phone, `${c.totalSpentMzn.toLocaleString('pt-MZ')} MZN`]);
+      printGeneralReport('Clientes & CRM', headers, rows);
+    } else {
+      const headers = ['Ref. Cotação', 'Cliente Solicitante', 'Origem', 'Destino', 'Orçamento Total', 'Validade', 'Estado'];
+      const rows = quotations.map((q) => [q.quotationNumber, q.customerName, q.origin, q.destination, `${q.totalPrice.toLocaleString('pt-MZ')} MZN`, q.validUntil, q.status]);
+      printGeneralReport('Cotações', headers, rows);
+    }
+    addToast('Relatório Gerado', 'Relatório enviado para impressão.', 'info');
+  };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <PageHeader
-        title="Comercial & Gestão de Clientes (CRM)"
-        subtitle="Carteira de clientes corporativos, emissão de cotações de frete e histórico de faturação."
-        icon={Building2}
-        actions={
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowQuotationFormModal(true)}
-              className="flex items-center space-x-1.5 px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-xl border border-slate-700 transition-all cursor-pointer"
-            >
-              <FileText size={14} className="text-brand-orange" />
-              <span>Emitir Cotação</span>
-            </button>
+    <StandardPageLayout
+      title="Comercial & CRM"
+      description="Gestão de clientes corporativos, limites de crédito e cotações de frete."
+      icon={Building2}
+      actions={
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={handleExportCSV}
+            className="h-9 px-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 btn-micro"
+          >
+            <Download size={14} />
+            <span>Exportar CSV</span>
+          </button>
 
+          <button
+            onClick={handlePrintReport}
+            className="h-9 px-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 btn-micro"
+          >
+            <Printer size={14} />
+            <span>Imprimir PDF</span>
+          </button>
+
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
             <button
-              onClick={() => setShowNewCustomerModal(true)}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl shadow-glow transition-all hover:scale-[1.02] cursor-pointer"
+              onClick={() => handleTabChange('customers')}
+              className={`min-h-[32px] px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center text-center leading-tight sm:w-auto btn-micro ${
+                activeTab === 'customers' ? 'bg-slate-900 dark:bg-brand-orange text-white dark:text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
             >
-              <Plus size={16} />
-              <span>Novo Cliente Corporativo</span>
+              Clientes ({customers.length})
+            </button>
+            <button
+              onClick={() => handleTabChange('quotations')}
+              className={`min-h-[32px] px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center text-center leading-tight sm:w-auto btn-micro ${
+                activeTab === 'quotations' ? 'bg-slate-900 dark:bg-brand-orange text-white dark:text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Cotações ({quotations.length})
             </button>
           </div>
-        }
-      />
 
-      {/* Tabs */}
-      <div className="flex space-x-2 border-b border-slate-800 pb-2">
-        <button
-          onClick={() => setActiveTab('customers')}
-          className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-            activeTab === 'customers'
-              ? 'bg-brand-orange/20 text-brand-orange border border-brand-orange/30 shadow-glow'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-          }`}
-        >
-          <Building2 size={16} />
-          <span>Carteira de Clientes ({customers.length})</span>
-        </button>
 
-        <button
-          onClick={() => setActiveTab('quotations')}
-          className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-            activeTab === 'quotations'
-              ? 'bg-brand-orange/20 text-brand-orange border border-brand-orange/30 shadow-glow'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-          }`}
-        >
-          <FileText size={16} />
-          <span>Cotações Emitidas ({quotations.length})</span>
-        </button>
-      </div>
 
+          {activeTab === 'customers' ? (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="h-9 px-4 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl shadow-subtle cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 btn-micro"
+            >
+              <Plus size={15} />
+              <span>Novo Cliente</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsAddQuotationOpen(true)}
+              className="h-9 px-4 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl shadow-subtle cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 btn-micro"
+            >
+              <FileSpreadsheet size={15} />
+              <span>Nova Cotação</span>
+            </button>
+          )}
+        </div>
+      }
+      kpiCards={
+        <>
+          <MetricCard
+            title="Total Clientes"
+            value={customers.length}
+            subtext="Clientes no cadastro ERP"
+            icon={Users}
+            iconBg="bg-slate-100"
+            iconColor="text-slate-900"
+          />
+          <MetricCard
+            title="Empresas S.A."
+            value={totalCorporateCount}
+            subtext="Contratos corporativos"
+            icon={Building2}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-600"
+          />
+          <MetricCard
+            title="Particulares"
+            value={totalParticularCount}
+            subtext="Clientes individuais"
+            icon={Users}
+            iconBg="bg-amber-50"
+            iconColor="text-amber-600"
+          />
+          <MetricCard
+            title="Total Faturado CRM"
+            value={`${(totalRevenueMzn / 1000000).toFixed(2)}M`}
+            unit="MZN"
+            subtext="Volume global de fretes"
+            icon={DollarSign}
+            iconBg="bg-emerald-50"
+            iconColor="text-emerald-600"
+          />
+          <MetricCard
+            title="Crédito Concedido"
+            value={`${(totalCreditLimitMzn / 1000000).toFixed(2)}M`}
+            unit="MZN"
+            subtext="Teto de crédito aprovado"
+            icon={CreditCard}
+            iconBg="bg-purple-50"
+            iconColor="text-purple-600"
+          />
+        </>
+      }
+    >
       {activeTab === 'customers' ? (
-        <FilamentTable
-          title="Lista de Clientes Cadastrados"
-          subtitle="Empresas parceiras organizadas em blocos informativos de 2 linhas."
-          columns={customerColumns}
+        <DataTable
           data={customers}
-          searchPlaceholder="Pesquisar cliente por nome, NUIT ou email..."
-          searchFields={['name', 'nuit', 'email', 'phone']}
-          filters={customerFilters}
-          onExportCsv={handleExportCsv}
-          actions={(cust) => (
-            <RowActionsDropdown
-              items={[
+          columns={customerColumns}
+          keyExtractor={(row) => row.id}
+          onRowClick={(row) => setSelectedCustomerDrawer(row)}
+          searchPlaceholder="Pesquisar por nome de cliente, NUIT ou email..."
+          filterOptions={[
+            {
+              label: 'Tipo',
+              key: 'isCorporate',
+              options: [
+                { value: 'true', label: 'Empresas' },
+                { value: 'false', label: 'Particulares' },
+              ],
+            },
+          ]}
+          quickActions={[
+            {
+              label: 'Ver Ficha & Histórico',
+              onClick: (row) => setSelectedCustomerDrawer(row),
+            },
+            {
+              label: 'Remover Cliente',
+              isDestructive: true,
+              onClick: (row) => setDeleteCustomerId(row.id),
+            },
+          ]}
+        />
+      ) : (
+        <div className="space-y-4">
+          <div className="flex justify-end gap-2">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <button
+                onClick={() => setQuotationView('funnel')}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  quotationView === 'funnel' ? 'bg-slate-900 dark:bg-brand-orange text-white dark:text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Vista de Funil (Kanban)"
+              >
+                <Columns size={16} />
+              </button>
+              <button
+                onClick={() => setQuotationView('list')}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  quotationView === 'list' ? 'bg-slate-900 dark:bg-brand-orange text-white dark:text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Vista em Lista"
+              >
+                <List size={16} />
+              </button>
+            </div>
+          </div>
+
+          {quotationView === 'list' ? (
+            <DataTable
+              data={quotations}
+              columns={quotationColumns}
+              keyExtractor={(row) => row.id}
+              onRowClick={(row) => setSelectedQuotationDrawer(row)}
+              searchPlaceholder="Pesquisar cotação por ref. ou cliente..."
+              quickActions={[
                 {
-                  label: 'Histórico Comercial',
-                  icon: FileText,
-                  onClick: () => setSelectedHistoryCustomer(cust),
+                  label: 'Ver Ficha da Cotação',
+                  onClick: (row: QuotationItem) => setSelectedQuotationDrawer(row),
                 },
                 {
-                  label: 'Ficha do Cliente (Drawer)',
-                  icon: Eye,
-                  onClick: () => setDrawerCustomer(cust),
+                  label: 'Marcar como Aceite pelo Cliente',
+                  onClick: (row: QuotationItem) => updateQuotationStatus(row.id, 'ACEITE'),
+                },
+                {
+                  label: 'Converter Cotação em Reserva',
+                  icon: ArrowRight,
+                  onClick: (row: QuotationItem) => convertQuotationToBooking(row.id),
                 },
               ]}
             />
+          ) : (
+            <QuotationsFunnel
+              quotations={quotations}
+              onQuotationClick={(row: QuotationItem) => setSelectedQuotationDrawer(row)}
+            />
           )}
-        />
-      ) : (
-        <div className="rounded-2xl bg-navy-900/90 border border-slate-800 overflow-hidden shadow-glass">
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
-                <tr>
-                  <th className="p-3.5 align-middle">Cotação & Cliente</th>
-                  <th className="p-3.5 align-middle">Rota & Carga</th>
-                  <th className="p-3.5 font-mono text-right align-middle">Valores (Subtotal / IVA)</th>
-                  <th className="p-3.5 align-middle">Estado</th>
-                  <th className="p-3.5 text-right align-middle">Ação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {quotations.map((q) => (
-                  <tr key={q.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="p-3.5 align-middle space-y-0.5">
-                      <span className="font-mono font-bold text-brand-orange block">{q.quotationNumber}</span>
-                      <span className="font-bold text-white block">{q.customerName}</span>
-                    </td>
-                    <td className="p-3.5 align-middle space-y-0.5">
-                      <span className="text-slate-300 block font-semibold">{q.origin} → {q.destination}</span>
-                      <span className="text-slate-400 text-[11px] block">{q.cargoDescription}</span>
-                    </td>
-                    <td className="p-3.5 font-mono text-right align-middle space-y-0.5">
-                      <span className="font-bold text-emerald-400 block">{q.totalPrice.toLocaleString('pt-MZ')} MT</span>
-                      <span className="text-slate-400 text-[11px] block">Sub: {q.priceSubtotal.toLocaleString('pt-MZ')} MT</span>
-                    </td>
-                    <td className="p-3.5 align-middle">
-                      <span
-                        className={`px-2 py-0.5 rounded font-semibold text-[10px] border ${
-                          q.status === 'APROVADA'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : q.status === 'FATURADO'
-                            ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        }`}
-                      >
-                        {q.status}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-right align-middle">
-                      <RowActionsDropdown
-                        items={[
-                          ...(q.status === 'APROVADA'
-                            ? [
-                                {
-                                  label: 'Gerar Fatura Fiscal',
-                                  icon: Receipt,
-                                  variant: 'primary' as const,
-                                  onClick: () => convertQuotationToInvoice(q.id),
-                                },
-                              ]
-                            : []),
-                          {
-                            label: 'Ver Cotação',
-                            icon: Eye,
-                            onClick: () => addToast('Cotação', `Visualização da Cotação ${q.quotationNumber}`, 'info'),
-                          },
-                        ]}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
 
-      {/* Slide-Over Drawer */}
-      <SlideOverDrawer
-        isOpen={Boolean(drawerCustomer)}
-        onClose={() => setDrawerCustomer(null)}
-        title={`Ficha do Cliente: ${drawerCustomer?.name}`}
-        subtitle="Dados cadastrais e histórico comercial"
-        icon={Building2}
+      {/* CLIENTE DETAIL DRAWER COM 7 SEPARADORES */}
+      {selectedCustomerDrawer && (
+        <DetailDrawer
+          isOpen={!!selectedCustomerDrawer}
+          onClose={() => setSelectedCustomerDrawer(null)}
+          title={`Ficha de Cliente — ${selectedCustomerDrawer.name}`}
+          subtitle={`NUIT: ${selectedCustomerDrawer.nuit} • Tipo: ${selectedCustomerDrawer.isCorporate ? 'Empresa' : 'Particular'}`}
+          width="xl"
+          tabs={[
+            {
+              id: 'resumo',
+              label: 'Resumo',
+              content: (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Email de Contacto</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{selectedCustomerDrawer.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Telemóvel / Directo</span>
+                      <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedCustomerDrawer.phone}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Morada Sede</span>
+                      <span className="text-slate-700 dark:text-slate-300 font-medium">{selectedCustomerDrawer.address}, {selectedCustomerDrawer.city}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Limite de Crédito Aprovado</span>
+                      <span className="font-mono font-bold text-sky-700 dark:text-sky-400">{selectedCustomerDrawer.creditLimitMzn.toLocaleString('pt-MZ')} MZN</span>
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              id: 'cotacoes',
+              label: 'Cotações',
+              badge: quotations.filter((q) => q.customerName === selectedCustomerDrawer.name).length,
+              content: (
+                <div className="space-y-2 text-xs">
+                  {quotations
+                    .filter((q) => q.customerName === selectedCustomerDrawer.name)
+                    .map((q) => (
+                      <div key={q.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl flex justify-between items-center">
+                        <div>
+                          <span className="font-mono font-bold text-brand-orange mr-2">{q.quotationNumber}</span>
+                          <span className="text-slate-700 dark:text-slate-300">{q.origin} ➔ {q.destination}</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">{q.totalPrice.toLocaleString('pt-MZ')} MZN</span>
+                      </div>
+                    ))}
+                </div>
+              ),
+            },
+            {
+              id: 'reservas',
+              label: 'Reservas',
+              badge: bookings.filter((b) => b.customerName === selectedCustomerDrawer.name).length,
+              content: (
+                <div className="space-y-2 text-xs">
+                  {bookings
+                    .filter((b) => b.customerName === selectedCustomerDrawer.name)
+                    .map((b) => (
+                      <div key={b.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl flex justify-between items-center">
+                        <div>
+                          <span className="font-mono font-bold text-brand-orange mr-2">{b.bookingNumber}</span>
+                          <span className="text-slate-700 dark:text-slate-300">{b.cargoDetails}</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">{b.totalPriceMzn.toLocaleString('pt-MZ')} MZN</span>
+                      </div>
+                    ))}
+                </div>
+              ),
+            },
+            {
+              id: 'viagens',
+              label: 'Viagens',
+              badge: trips.filter((t) => t.customerName === selectedCustomerDrawer.name).length,
+              content: (
+                <div className="space-y-2 text-xs">
+                  {trips
+                    .filter((t) => t.customerName === selectedCustomerDrawer.name)
+                    .map((t) => (
+                      <div key={t.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl flex justify-between items-center">
+                        <div>
+                          <span className="font-mono font-bold text-brand-orange mr-2">{t.tripNumber}</span>
+                          <span className="text-slate-700 dark:text-slate-300">{t.origin} ➔ {t.destination}</span>
+                        </div>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{t.totalPriceMzn.toLocaleString('pt-MZ')} MZN</span>
+                      </div>
+                    ))}
+                </div>
+              ),
+            },
+            {
+              id: 'faturas',
+              label: 'Facturas',
+              badge: invoices.filter((i) => i.customerName === selectedCustomerDrawer.name).length,
+              content: (
+                <div className="space-y-2 text-xs">
+                  {invoices
+                    .filter((i) => i.customerName === selectedCustomerDrawer.name)
+                    .map((inv) => (
+                      <div key={inv.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl flex justify-between items-center">
+                        <div>
+                          <span className="font-mono font-bold text-brand-orange mr-2">{inv.invoiceNumber}</span>
+                          <span className="text-slate-700 dark:text-slate-300">{inv.status}</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">{inv.totalAmount.toLocaleString('pt-MZ')} MZN</span>
+                      </div>
+                    ))}
+                </div>
+              ),
+            },
+            {
+              id: 'pagamentos',
+              label: 'Pagamentos',
+              badge: payments.filter((p) => p.customerName === selectedCustomerDrawer.name).length,
+              content: (
+                <div className="space-y-2 text-xs">
+                  {payments
+                    .filter((p) => p.customerName === selectedCustomerDrawer.name)
+                    .map((p) => (
+                      <div key={p.id} className="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl flex justify-between items-center">
+                        <div>
+                          <span className="font-mono font-bold text-brand-orange mr-2">{p.paymentNumber}</span>
+                          <span className="text-slate-700 dark:text-slate-300">{p.method} ({p.referenceNo})</span>
+                        </div>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{p.amountMzn.toLocaleString('pt-MZ')} MZN</span>
+                      </div>
+                    ))}
+                </div>
+              ),
+            },
+            {
+              id: 'historico',
+              label: 'Histórico',
+              content: (
+                <div className="text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                  <p>Cliente registado na base de dados N'Tandinho com teto de crédito verificado.</p>
+                </div>
+              ),
+            },
+          ]}
+        />
+      )}
+
+      {/* COTAÇÃO DETAIL DRAWER */}
+      {selectedQuotationDrawer && (
+        <DetailDrawer
+          isOpen={!!selectedQuotationDrawer}
+          onClose={() => setSelectedQuotationDrawer(null)}
+          title={`Proposta Comercial — ${selectedQuotationDrawer.quotationNumber}`}
+          subtitle={`Cliente: ${selectedQuotationDrawer.customerName} • Rota: ${selectedQuotationDrawer.origin} ➔ ${selectedQuotationDrawer.destination}`}
+          width="lg"
+          actions={
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  printGeneralReport(
+                    `Cotação ${selectedQuotationDrawer.quotationNumber}`,
+                    ['Campo / Descrição', 'Valor / Especificação'],
+                    [
+                      ['Ref. Cotação', selectedQuotationDrawer.quotationNumber],
+                      ['Cliente Solicitante', selectedQuotationDrawer.customerName],
+                      ['Rota de Transporte', `${selectedQuotationDrawer.origin} ➔ ${selectedQuotationDrawer.destination}`],
+                      ['Descrição da Carga', selectedQuotationDrawer.cargoDescription],
+                      ['Subtotal Carga', `${selectedQuotationDrawer.priceSubtotal.toLocaleString('pt-MZ')} MZN`],
+                      ['Imposto IVA (16%)', `${selectedQuotationDrawer.taxAmount.toLocaleString('pt-MZ')} MZN`],
+                      ['Total Orçamentado', `${selectedQuotationDrawer.totalPrice.toLocaleString('pt-MZ')} MZN`],
+                    ]
+                  );
+                }}
+                className="h-8 px-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <Printer size={14} />
+                <span>Imprimir PDF</span>
+              </button>
+              {selectedQuotationDrawer.status !== 'ACEITE' && (
+                <button
+                  onClick={() => {
+                    updateQuotationStatus(selectedQuotationDrawer.id, 'ACEITE');
+                    setSelectedQuotationDrawer(null);
+                  }}
+                  className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer transition-colors"
+                >
+                  Aprovar & Aceitar
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  convertQuotationToBooking(selectedQuotationDrawer.id);
+                  setSelectedQuotationDrawer(null);
+                }}
+                className="h-8 px-3 bg-slate-900 dark:bg-brand-orange hover:bg-slate-800 dark:hover:bg-brand-orange-hover text-white dark:text-slate-950 text-xs font-bold rounded-xl shadow-subtle cursor-pointer transition-colors flex items-center gap-1"
+              >
+                <ArrowRight size={14} />
+                <span>Gerar Reserva</span>
+              </button>
+            </div>
+          }
+          tabs={[
+            {
+              id: 'detalhes',
+              label: 'Resumo da Proposta',
+              content: (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Cliente Solicitante</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{selectedQuotationDrawer.customerName}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Estado Atual</span>
+                      <span className="font-bold text-brand-orange">{selectedQuotationDrawer.status}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Origem</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{selectedQuotationDrawer.origin}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 dark:text-slate-400 block">Destino</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{selectedQuotationDrawer.destination}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 font-mono">
+                    <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                      <span>Subtotal Carga:</span>
+                      <span>{selectedQuotationDrawer.priceSubtotal.toLocaleString('pt-MZ')} MZN</span>
+                    </div>
+                    <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                      <span>Imposto IVA (16%):</span>
+                      <span>{selectedQuotationDrawer.taxAmount.toLocaleString('pt-MZ')} MZN</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700">
+                      <span>Total Orçamentado:</span>
+                      <span className="text-brand-orange">{selectedQuotationDrawer.totalPrice.toLocaleString('pt-MZ')} MZN</span>
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+          ]}
+        />
+      )}
+
+      {/* MODAL ADICIONAR CLIENTE */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Cadastrar Novo Cliente"
+        subtitle="Registe cliente empresarial ou particular na base de dados N' Tandinho"
+        maxWidth="md"
       >
-        {drawerCustomer && (
-          <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase block">Identificação Fiscal</span>
-              <p className="font-bold text-white text-base">{drawerCustomer.name}</p>
-              <p className="font-mono text-brand-orange font-bold">NUIT: {drawerCustomer.nuit}</p>
+        <form onSubmit={handleCreateCustomer} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="md:col-span-2">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Nome Completo / Razão Social</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: Cervejas de Moçambique S.A."
+                required
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              />
             </div>
-
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase block">Contactos Principais</span>
-              <p className="text-slate-200 flex items-center gap-1.5">
-                <Mail size={14} className="text-brand-orange" /> {drawerCustomer.email}
-              </p>
-              <p className="text-slate-200 flex items-center gap-1.5 font-mono">
-                <Phone size={14} className="text-slate-500" /> {drawerCustomer.phone}
-              </p>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">NUIT</label>
+              <input
+                type="text"
+                value={nuit}
+                onChange={(e) => setNuit(e.target.value)}
+                placeholder="Ex: 400192834"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              />
             </div>
-
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase block">Estatuto Cadastral</span>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-xs border border-emerald-500/20 inline-block">
-                {drawerCustomer.status} (Credenciado)
-              </span>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Tipo de Cliente</label>
+              <select
+                value={isCorporate ? 'EMPRESA' : 'PARTICULAR'}
+                onChange={(e) => setIsCorporate(e.target.value === 'EMPRESA')}
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:border-slate-400 dark:focus:border-slate-500"
+              >
+                <option value="EMPRESA" className="dark:bg-slate-800">Empresa / Corporativo</option>
+                <option value="PARTICULAR" className="dark:bg-slate-800">Particular / Individual</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="logistica@empresa.co.mz"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Telemóvel / Contacto</label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+258 84 000 0000"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              />
             </div>
           </div>
-        )}
-      </SlideOverDrawer>
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold rounded-xl cursor-pointer transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-slate-900 dark:bg-brand-orange hover:bg-slate-800 dark:hover:bg-brand-orange-hover text-white dark:text-slate-950 text-xs font-bold rounded-xl shadow-subtle cursor-pointer transition-colors"
+            >
+              Guardar Cliente
+            </button>
+          </div>
+        </form>
+      </Modal>
 
-      {/* Modals */}
-      {showNewCustomerModal && (
-        <NewCustomerModal onClose={() => setShowNewCustomerModal(false)} onSuccess={() => setShowNewCustomerModal(false)} />
-      )}
+      {/* CONFIRM MODAL REMOVER CLIENTE */}
+      <ConfirmModal
+        isOpen={!!deleteCustomerId}
+        onClose={() => setDeleteCustomerId(null)}
+        onConfirm={() => {
+          if (deleteCustomerId) deleteCustomer(deleteCustomerId);
+        }}
+        title="Desativar e Remover Cliente"
+        description="Tem a certeza de que deseja remover este cliente? O histórico financeiro será preservado na auditoria."
+        confirmLabel="Remover Cliente"
+        isDestructive={true}
+      />
 
-      {showQuotationFormModal && (
-        <QuotationForm onClose={() => setShowQuotationFormModal(false)} onSuccess={() => setShowQuotationFormModal(false)} />
-      )}
-
-      {selectedHistoryCustomer && (
-        <CustomerHistoryModal customer={selectedHistoryCustomer} onClose={() => setSelectedHistoryCustomer(null)} />
-      )}
-    </div>
+      {/* MODAL CRIAR COTAÇÃO */}
+      <Modal
+        isOpen={isAddQuotationOpen}
+        onClose={() => setIsAddQuotationOpen(false)}
+        title="Nova Cotação Comercial"
+        subtitle="Orçamento formal de transporte de carga com cálculo automático de IVA (16%)"
+        maxWidth="md"
+      >
+        <form onSubmit={handleCreateQuotationSubmit} className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Cliente Solicitante *</label>
+            <input
+              type="text"
+              required
+              value={qCustName}
+              onChange={(e) => setQCustName(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Origem *</label>
+              <input
+                type="text"
+                required
+                value={qOrigCity}
+                onChange={(e) => setQOrigCity(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Destino *</label>
+              <input
+                type="text"
+                required
+                value={qDestCity}
+                onChange={(e) => setQDestCity(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Descrição da Carga</label>
+            <input
+              type="text"
+              value={qCargoDesc}
+              onChange={(e) => setQCargoDesc(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1">Orçamento Total (MZN) *</label>
+            <input
+              type="number"
+              required
+              value={qTotalPrice}
+              onChange={(e) => setQTotalPrice(Number(e.target.value))}
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-slate-400"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => setIsAddQuotationOpen(false)}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold rounded-xl cursor-pointer transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-slate-900 dark:bg-brand-orange hover:bg-slate-800 dark:hover:bg-brand-orange-hover text-white dark:text-slate-950 text-xs font-bold rounded-xl shadow-subtle cursor-pointer transition-colors"
+            >
+              Gerar Cotação
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </StandardPageLayout>
   );
 };

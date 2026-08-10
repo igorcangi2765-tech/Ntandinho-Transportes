@@ -79,7 +79,7 @@ export const ReceiptViewerModal: React.FC<ReceiptViewerModalProps> = ({ invoice,
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Quantia de:</span>
                 <span className="font-mono font-bold text-slate-900">
-                  {Number(invoice.paidAmount).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MT
+                  {Number(invoice.paidAmount).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MZN
                 </span>
               </div>
               <div className="flex justify-between items-center">

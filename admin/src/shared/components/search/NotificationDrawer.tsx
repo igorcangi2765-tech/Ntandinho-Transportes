@@ -31,22 +31,22 @@ export const NotificationDrawer: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-navy-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
       <div className="absolute inset-0" onClick={() => setNotificationDrawerOpen(false)} />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-navy-900 border-l border-slate-800 shadow-2xl flex flex-col justify-between">
+        <div className="w-screen max-w-md bg-white dark:bg-[#0B132B] border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between h-full relative z-10">
           {/* Header */}
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div className="p-2 rounded-xl bg-brand-orange/10 text-brand-orange border border-brand-orange/20">
+          <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-[#111D33]/90">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 dark:bg-brand-orange/20 text-brand-orange border border-amber-500/30 dark:border-brand-orange/40">
                 <Bell size={18} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                   Notificações do Sistema
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   {unreadCount} não lida{unreadCount === 1 ? '' : 's'}
                 </p>
               </div>
@@ -54,21 +54,22 @@ export const NotificationDrawer: React.FC = () => {
 
             <button
               onClick={() => setNotificationDrawerOpen(false)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Fechar"
             >
               <X size={18} />
             </button>
           </div>
 
           {/* Notification List */}
-          <div className="flex-1 p-5 overflow-y-auto space-y-3">
+          <div className="flex-1 p-5 overflow-y-auto space-y-3 bg-slate-100/50 dark:bg-[#0B132B]">
             {notifications.length > 0 ? (
               notifications.map((item) => {
                 const icons = {
-                  success: <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />,
-                  warning: <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />,
-                  error: <AlertCircle size={16} className="text-rose-400 shrink-0 mt-0.5" />,
-                  info: <Info size={16} className="text-sky-400 shrink-0 mt-0.5" />,
+                  success: <CheckCircle2 size={18} className="text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />,
+                  warning: <AlertTriangle size={18} className="text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />,
+                  error: <AlertCircle size={18} className="text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />,
+                  info: <Info size={18} className="text-sky-500 dark:text-sky-400 shrink-0 mt-0.5" />,
                 };
 
                 return (
@@ -76,22 +77,26 @@ export const NotificationDrawer: React.FC = () => {
                     key={item.id}
                     onClick={() => handleNotifClick(item.id, item.link)}
                     className={cn(
-                      'p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start space-x-3 text-xs',
+                      'p-4 rounded-2xl border transition-all cursor-pointer flex items-start space-x-3 text-xs shadow-xs',
                       item.read
-                        ? 'bg-slate-900/40 border-slate-800/60 opacity-70 hover:opacity-100'
-                        : 'bg-navy-850 border-brand-orange/30 shadow-md'
+                        ? 'bg-white dark:bg-[#111D33] border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#16223B]'
+                        : 'bg-amber-500/10 dark:bg-[#16223B] border-amber-500/40 dark:border-brand-orange/50 text-slate-900 dark:text-white shadow-sm font-medium'
                     )}
                   >
                     {icons[item.type]}
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-slate-100">{item.title}</h4>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className={cn('font-bold text-sm leading-tight', item.read ? 'text-slate-800 dark:text-slate-200' : 'text-slate-900 dark:text-white')}>
+                          {item.title}
+                        </h4>
                         {!item.read && (
-                          <span className="w-2 h-2 rounded-full bg-brand-orange shrink-0 ml-2" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-brand-orange shrink-0 shadow-xs" />
                         )}
                       </div>
-                      <p className="text-slate-400 mt-1 leading-relaxed">{item.message}</p>
-                      <span className="text-[10px] text-slate-500 block mt-2 font-mono">
+                      <p className="text-slate-600 dark:text-slate-300 text-xs mt-1.5 leading-relaxed">
+                        {item.message}
+                      </p>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-400 block mt-2 font-mono font-semibold">
                         {item.timestamp}
                       </span>
                     </div>
@@ -99,29 +104,31 @@ export const NotificationDrawer: React.FC = () => {
                 );
               })
             ) : (
-              <div className="text-center py-12 text-slate-500 text-xs">
-                Nenhuma notificação no momento.
+              <div className="text-center py-16 px-4 bg-white dark:bg-[#111D33] border border-slate-200 dark:border-slate-800 rounded-2xl">
+                <Bell size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">Sem Notificações</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">Não existem alertas pendentes no momento.</p>
               </div>
             )}
           </div>
 
           {/* Footer Actions */}
-          <div className="p-4 border-t border-slate-800 bg-navy-950/80 flex items-center justify-between">
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] flex items-center justify-between gap-3">
             <button
               onClick={markAllAsRead}
               disabled={unreadCount === 0}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 text-xs font-semibold flex items-center space-x-1.5 transition-all"
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
             >
-              <CheckCheck size={14} />
-              <span>Marcar Todas como Lidas</span>
+              <CheckCheck size={15} />
+              <span>Marcar todas como lidas</span>
             </button>
 
             <button
               onClick={clearNotifications}
               disabled={notifications.length === 0}
-              className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 disabled:opacity-40 text-rose-400 text-xs font-semibold flex items-center space-x-1.5 transition-all border border-rose-500/20"
+              className="px-3.5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 disabled:opacity-40 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all border border-rose-500/20 cursor-pointer"
             >
-              <Trash2 size={14} />
+              <Trash2 size={15} />
               <span>Limpar</span>
             </button>
           </div>

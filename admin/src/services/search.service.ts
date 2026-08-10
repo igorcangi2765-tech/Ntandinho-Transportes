@@ -85,7 +85,7 @@ const searchDatabase: SearchResultItem[] = [
     title: 'Viagem #C849: Maputo ➔ Nampula',
     subtitle: 'Container 40ft • Motorista: João Mucavel',
     category: 'trip',
-    url: '/admin/loads',
+    url: '/operations?tab=trips',
     badge: '75% Concluído',
   },
   {
@@ -93,7 +93,7 @@ const searchDatabase: SearchResultItem[] = [
     title: 'Viagem #C850: Beira ➔ Lilongwe (Malawi)',
     subtitle: 'Carga Geral SADC • Motorista: Mateus Sitoe',
     category: 'trip',
-    url: '/admin/loads',
+    url: '/operations?tab=trips',
     badge: 'Em Despacho',
   },
 

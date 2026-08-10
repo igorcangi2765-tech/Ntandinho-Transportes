@@ -55,7 +55,7 @@ export const CommandPalette: React.FC = () => {
     { title: 'Painel Geral (Dashboard)', path: '/', icon: LayoutDashboard },
     { title: 'CRM & Cotações', path: '/crm', icon: Users },
     { title: 'Gestão de Frota', path: '/fleet', icon: Truck },
-    { title: 'Logística & Cargas', path: '/loads', icon: Package },
+    { title: 'Operações & Despacho', path: '/operations', icon: Package },
     { title: 'Financeiro', path: '/finance', icon: DollarSign },
     { title: 'Auditoria & Logs', path: '/audit-logs', icon: ShieldCheck },
     { title: 'Configurações', path: '/settings', icon: Settings },

@@ -10,6 +10,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor_react: ['react', 'react-dom', 'react-router-dom'],
+          vendor_recharts: ['recharts'],
+          vendor_icons: ['lucide-react'],
+        },
+      },
+    },
   },
   resolve: {
     alias: {

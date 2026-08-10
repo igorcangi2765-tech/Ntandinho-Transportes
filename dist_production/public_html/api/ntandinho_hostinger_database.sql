@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   CONSTRAINT `users_roleId_fkey` FOREIGN KEY (`roleId`) REFERENCES `roles` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT IGNORE INTO `users` (`id`, `email`, `password`, `name`, `phone`, `roleId`, `isActive`, `createdAt`, `updatedAt`) VALUES ('7f173bc4-672b-49dc-83cd-aaf362b1d5c5', 'admin@ntandinho.co.mz', '$2a$10$liHstyKSwoe5TlvlH2qCXupoR03ZJYleO6BKVYz6/QzMkCkYYOZL2', 'Administrador N'' Tandinho', NULL, 'f670c9ef-c4f5-43fe-8d38-3451c41118e2', 1, NOW(), NOW());
+INSERT IGNORE INTO `users` (`id`, `email`, `password`, `name`, `phone`, `roleId`, `isActive`, `createdAt`, `updatedAt`) VALUES ('7f173bc4-672b-49dc-83cd-aaf362b1d5c5', 'admin@ntandinho.co.mz', '$2a$10$GeI5LuqSkU/kxvG3fm/gtumXxJi14CJ1LCt2PvaE8Md9oVGv.PY6C', 'Administrador', NULL, 'f670c9ef-c4f5-43fe-8d38-3451c41118e2', 1, NOW(), NOW());
 
 -- Tabela `payment_methods`
 CREATE TABLE IF NOT EXISTS `payment_methods` (

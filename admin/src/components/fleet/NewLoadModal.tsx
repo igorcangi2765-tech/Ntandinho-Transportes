@@ -1,19 +1,6 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { Package, X, Plus } from 'lucide-react';
+import { Package, X, Plus, AlertCircle } from 'lucide-react';
 import { useErpStore } from '../../shared/stores/useErpStore';
-
-const loadSchema = z.object({
-  client: z.string().min(2, 'Selecione ou introduza o cliente.'),
-  origin: z.string().min(2, 'Informe o ponto de origem.'),
-  destination: z.string().min(2, 'Informe o destino.'),
-  cargo: z.string().min(3, 'Descrição da mercadoria.'),
-  truck: z.string().min(2, 'Selecione o camião.'),
-  driver: z.string().min(2, 'Selecione o motorista.'),
-});
-
-type LoadFormData = z.infer<typeof loadSchema>;
 
 interface NewLoadModalProps {
   onClose: () => void;
@@ -21,33 +8,51 @@ interface NewLoadModalProps {
 }
 
 export const NewLoadModal: React.FC<NewLoadModalProps> = ({ onClose, onSuccess }) => {
-  const { addLoad, customers, vehicles, drivers } = useErpStore();
-  const [submitting, setSubmitting] = useState(false);
+  const { customers, addTrip } = useErpStore();
+  const [selectedCustomerId, setSelectedCustomerId] = useState(customers[0]?.id || '');
+  const [origin, setOrigin] = useState('Matola, Maputo');
+  const [destination, setDestination] = useState('Nampula (Corredor N1)');
+  const [cargoDescription, setCargoDescription] = useState('Mercadorias em Contentor');
+  const [weightKg, setWeightKg] = useState(18000);
+  const [totalPriceMzn, setTotalPriceMzn] = useState(250000);
 
-  const {
-    register,
-    handleSubmit,
-  } = useForm<LoadFormData>({
-    defaultValues: {
-      client: customers[0]?.name || 'Cervejas de Moçambique (CDM)',
-      origin: 'Maputo (Terminal)',
-      destination: 'Nampula',
-      cargo: 'Paletes de Bebidas 2M (30 Toneladas)',
-      truck: vehicles[0]?.plateNumber ? `${vehicles[0].make} (${vehicles[0].plateNumber})` : 'Volvo FH16 (ABM-849-MC)',
-      driver: drivers[0]?.name || 'João Mucavel',
-    },
-  });
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const onSubmit = async (data: LoadFormData) => {
-    setSubmitting(true);
-    addLoad(data);
-    onSuccess();
-    onClose();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg(null);
+
+    try {
+      const customer = customers.find((c) => c.id === selectedCustomerId) || customers[0];
+
+      addTrip({
+        customerId: customer?.id || 'cust-1',
+        customerName: customer ? customer.name : 'Cliente Corporativo',
+        origin,
+        destination,
+        cargoDescription,
+        weightKg: Number(weightKg),
+        vehiclePlate: 'ABM-849-MC',
+        vehicleModel: 'Volvo FH16',
+        driverName: 'João Mucavel',
+        serviceName: 'Transporte de Mercadorias',
+        totalPriceMzn: totalPriceMzn * 1.16,
+      });
+
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao criar ordem de transporte.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="max-w-lg w-full bg-navy-900 border border-slate-800 rounded-3xl shadow-glass p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div className="max-w-lg w-full bg-navy-900 border border-slate-800 rounded-3xl shadow-glass p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
           className="absolute top-6 right-6 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
@@ -60,81 +65,83 @@ export const NewLoadModal: React.FC<NewLoadModalProps> = ({ onClose, onSuccess }
             <Package size={22} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Criar Nova Ordem de Carga</h2>
-            <p className="text-xs text-slate-400">Emissão de Guia de Transporte de Mercadorias.</p>
+            <h2 className="text-xl font-bold text-white tracking-tight">Criar Ordem de Carga & Transporte</h2>
+            <p className="text-xs text-slate-400">Registo de nova expedição de mercadorias no sistema ERP.</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {errorMsg && (
+          <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2">
+            <AlertCircle size={16} />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1">Cliente Solicitante</label>
             <select
-              {...register('client')}
-              className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60 cursor-pointer"
+              value={selectedCustomerId}
+              onChange={(e) => setSelectedCustomerId(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60"
             >
               {customers.map((c) => (
-                <option key={c.id} value={c.name}>
-                  {c.name}
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.nuit})
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Origem do Carregamento</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Origem</label>
               <input
                 type="text"
-                {...register('origin')}
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Destino Final</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Destino</label>
               <input
                 type="text"
-                {...register('destination')}
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Descrição Detalhada da Carga</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">Descrição da Carga</label>
             <input
               type="text"
-              {...register('cargo')}
+              value={cargoDescription}
+              onChange={(e) => setCargoDescription(e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Camião Alocado</label>
-              <select
-                {...register('truck')}
-                className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60 cursor-pointer font-mono"
-              >
-                {vehicles.map((v) => (
-                  <option key={v.id} value={`${v.make} (${v.plateNumber})`}>
-                    {v.plateNumber} • {v.make}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Peso Estimado (kg)</label>
+              <input
+                type="number"
+                value={weightKg}
+                onChange={(e) => setWeightKg(Number(e.target.value))}
+                className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs font-mono focus:border-brand-orange/60"
+              />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Motorista</label>
-              <select
-                {...register('driver')}
-                className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60 cursor-pointer"
-              >
-                {drivers.map((d) => (
-                  <option key={d.id} value={d.name}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Valor do Serviço (MZN)</label>
+              <input
+                type="number"
+                value={totalPriceMzn}
+                onChange={(e) => setTotalPriceMzn(Number(e.target.value))}
+                className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs font-mono focus:border-brand-orange/60"
+              />
             </div>
           </div>
 
@@ -148,11 +155,11 @@ export const NewLoadModal: React.FC<NewLoadModalProps> = ({ onClose, onSuccess }
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={loading}
               className="flex items-center space-x-2 px-5 py-2 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl shadow-glow transition-all cursor-pointer"
             >
               <Plus size={14} />
-              <span>Emitir Guia de Carga</span>
+              <span>{loading ? 'A criar...' : 'Criar Ordem'}</span>
             </button>
           </div>
         </form>

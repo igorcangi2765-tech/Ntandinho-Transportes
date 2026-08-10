@@ -3,7 +3,6 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { cn } from '../utils/cn';
 import { useAppStore } from '../stores/useAppStore';
 import { CommandPalette } from '../components/search/CommandPalette';
 import { NotificationDrawer } from '../components/search/NotificationDrawer';
@@ -16,7 +15,6 @@ import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';
 export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const {
-    sidebarCollapsed,
     toggleCommandPalette,
     setCommandPaletteOpen,
     setNotificationDrawerOpen,
@@ -42,22 +40,17 @@ export const AdminLayout: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 flex font-sans relative selection:bg-brand-orange selection:text-white">
-      {/* Sidebar Navigation */}
+    <div className="h-screen w-full overflow-hidden bg-background text-text-primary flex font-sans relative selection:bg-[#F6A823] selection:text-[#0B132B]">
+      {/* Fixed Sidebar Navigation */}
       <Sidebar />
 
-      {/* Main Content Area */}
-      <div
-        className={cn(
-          'flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0',
-          sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[280px]'
-        )}
-      >
+      {/* Independent Main Content Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden transition-all duration-300 ease-in-out">
         <Header />
 
-        {/* 8px spacing grid system: p-6 (24px) for desktop, p-4 (16px) for mobile */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-hidden relative">
-          <div className="max-w-screen-2xl mx-auto">
+        {/* Independent Page Scroll Area */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto overflow-x-hidden relative custom-scrollbar">
+          <div className="w-full">
             <ErrorBoundary>
               <Suspense fallback={<PageLoader message="A carregar interface..." />}>
                 <AnimatePresence mode="wait">
@@ -77,7 +70,7 @@ export const AdminLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Root Modals & Drawers (Highest Z-Index Layer) */}
+      {/* Global Root Modals & Drawers */}
       <CommandPalette />
       <NotificationDrawer />
       <EditProfileModal />

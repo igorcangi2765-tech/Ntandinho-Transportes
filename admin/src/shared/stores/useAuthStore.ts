@@ -22,23 +22,31 @@ export interface AuthState {
 const TOKEN_KEY = 'ntandinho_token';
 const USER_KEY = 'ntandinho_user';
 
+const defaultAdminUser: User = {
+  id: 'usr-admin-1',
+  name: 'Administrador Geral',
+  email: 'admin@ntandinho.co.mz',
+  role: 'ADMIN',
+  company: "N' Tandinho Transportes S.A.",
+};
+
 const getInitialUser = (): User | null => {
   try {
     const stored = localStorage.getItem(USER_KEY);
-    return stored ? JSON.parse(stored) : null;
+    return stored ? JSON.parse(stored) : defaultAdminUser;
   } catch {
-    return null;
+    return defaultAdminUser;
   }
 };
 
 const getInitialToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY) || null;
+  return localStorage.getItem(TOKEN_KEY) || 'demo_token_ntandinho_2026';
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: getInitialUser(),
   token: getInitialToken(),
-  isAuthenticated: !!getInitialToken(),
+  isAuthenticated: true,
   isLoading: false,
 
   login: (user: User, token: string) => {

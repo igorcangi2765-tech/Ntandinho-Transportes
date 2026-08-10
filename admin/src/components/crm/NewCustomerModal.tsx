@@ -43,7 +43,12 @@ export const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ onClose, onS
     setErrorMsg(null);
 
     try {
-      addCustomer(data);
+      addCustomer({
+        ...data,
+        address: 'Matola / Maputo',
+        city: 'Maputo',
+        creditLimitMzn: data.isCorporate ? 5000000 : 200000,
+      });
       onSuccess();
       onClose();
     } catch (err: any) {

@@ -17,12 +17,12 @@ export const Breadcrumb: React.FC = () => {
   const pathSegments = location.pathname.split('/').filter(Boolean);
 
   return (
-    <nav className="flex items-center space-x-2 text-xs font-medium text-slate-400">
+    <nav className="flex items-center space-x-2 text-xs font-semibold text-slate-600 dark:text-slate-400 select-none">
       <Link
         to="/"
-        className="hover:text-white flex items-center gap-1 transition-colors"
+        className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
       >
-        <Home size={13} className="text-brand-orange" />
+        <Home size={13} className="text-amber-600 dark:text-[#F6A823] shrink-0" />
         <span>Início</span>
       </Link>
 
@@ -35,11 +35,16 @@ export const Breadcrumb: React.FC = () => {
 
         return (
           <React.Fragment key={path}>
-            <ChevronRight size={12} className="text-slate-600" />
+            <ChevronRight size={12} className="text-slate-400 dark:text-slate-500 shrink-0" />
             {isLast ? (
-              <span className="text-white font-semibold">{label}</span>
+              <span className="text-slate-900 dark:text-white font-extrabold tracking-tight">
+                {label}
+              </span>
             ) : (
-              <Link to={path} className="hover:text-white transition-colors">
+              <Link
+                to={path}
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
                 {label}
               </Link>
             )}
@@ -49,3 +54,4 @@ export const Breadcrumb: React.FC = () => {
     </nav>
   );
 };
+

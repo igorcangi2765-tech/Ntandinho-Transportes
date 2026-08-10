@@ -43,7 +43,7 @@ const initialNotifications: NotificationItem[] = [
     type: 'success',
     timestamp: 'Há 12 minutos',
     read: false,
-    link: '/loads',
+    link: '/operations?tab=trips',
   },
   {
     id: 'n-2',
@@ -66,7 +66,7 @@ const initialNotifications: NotificationItem[] = [
   {
     id: 'n-4',
     title: 'Fatura #INV-2026-089 Liquidada',
-    message: 'Pagamento de 1.450.000 MT recebido de Tete Mining Corp.',
+    message: 'Pagamento de 1.450.000 MZN recebido de Tete Mining Corp.',
     type: 'success',
     timestamp: 'Há 4 horas',
     read: true,

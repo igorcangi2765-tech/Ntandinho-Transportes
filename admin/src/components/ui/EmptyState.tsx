@@ -12,8 +12,8 @@ interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  title = 'Nenhum registo encontrado',
-  description = 'Não existem dados disponíveis para apresentar de momento.',
+  title = 'Sem registos',
+  description = 'Sem dados disponíveis.',
   icon: Icon = PackageOpen,
   action,
 }) => {

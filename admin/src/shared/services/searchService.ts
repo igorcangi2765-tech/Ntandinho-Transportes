@@ -47,7 +47,7 @@ const searchDatabase: SearchResultItem[] = [
     title: 'Viagem #C849: Maputo ➔ Nampula',
     subtitle: 'Container 40ft • Motorista: João Mucavel',
     category: 'trip',
-    url: '/loads',
+    url: '/operations?tab=trips',
     badge: '75% Concluído',
   },
   {

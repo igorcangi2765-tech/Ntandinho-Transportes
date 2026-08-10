@@ -1,117 +1,87 @@
 import React from 'react';
-import { X, Printer, Download, Truck } from 'lucide-react';
-import { useNotificationStore } from '../../shared/stores/useNotificationStore';
-import { LoadItem } from '../../shared/stores/useErpStore';
-import { CompanyDocumentHeader } from '../shared/CompanyDocumentHeader';
+import { X, Printer, FileText } from 'lucide-react';
+import { TripItem, useErpStore } from '../../shared/stores/useErpStore';
 
 interface GuiaTransporteModalProps {
-  load: LoadItem;
+  load: TripItem;
   onClose: () => void;
 }
 
 export const GuiaTransporteModal: React.FC<GuiaTransporteModalProps> = ({ load, onClose }) => {
-  const { addToast } = useNotificationStore();
+  const companyProfile = useErpStore((state) => state.companyProfile);
 
   const handlePrint = () => {
     window.print();
   };
 
-  const handleDownload = () => {
-    addToast('Download Guia', `Guia de Transporte ${load.id} descarregada em formato PDF!`, 'success');
-  };
-
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-      <div className="max-w-4xl w-full bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
-        {/* Barra de Ações Superior Discreta */}
-        <div className="px-5 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 text-slate-300">
-          <div className="flex items-center space-x-2">
-            <Truck size={15} className="text-brand-orange" />
-            <span className="text-xs font-semibold text-white">Guia de Transporte {load.id}</span>
-          </div>
+    <div className="fixed inset-0 z-50 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="max-w-2xl w-full bg-navy-900 border border-slate-800 rounded-3xl shadow-glass p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          <X size={20} />
+        </button>
 
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handlePrint}
-              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Printer size={13} />
-              <span>Imprimir</span>
-            </button>
-            <button
-              onClick={handleDownload}
-              className="px-3 py-1 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 text-xs font-bold rounded transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <Download size={13} />
-              <span>PDF</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer ml-1"
-              title="Fechar"
-            >
-              <X size={18} />
-            </button>
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-brand-orange/15 border border-brand-orange/30 text-brand-orange flex items-center justify-center">
+            <FileText size={22} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Guia de Transporte Oficial — N' Tandinho</h2>
+            <p className="text-xs text-slate-400">Documento de acompanhamento da mercadoria em trânsito (Lei Fiscal de Moçambique).</p>
           </div>
         </div>
 
-        {/* Folha Oficial de Documento (SAP / Primavera / PHC Standard - Less is More) */}
-        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-slate-950/40">
-          <div className="max-w-3xl mx-auto bg-white text-slate-900 rounded shadow-xl p-6 sm:p-10 font-sans text-xs border border-slate-200 print:shadow-none print:p-0 print:border-none print:w-full space-y-5">
-            {/* Cabeçalho Corporativo Essencial */}
-            <CompanyDocumentHeader
-              documentType="GUIA DE TRANSPORTE"
-              documentNumber={load.id}
-              documentDate={load.departureDate}
-              documentStatus={load.statusLabel}
-              isPrintSheet={true}
-            />
-
-            {/* Expedidor & Destinatário */}
-            <div className="py-2 border-y border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Expedidor / Cliente:</span>
-                <p className="font-bold text-slate-900 mt-0.5">{load.client}</p>
-                <p className="text-slate-600 text-[11px] mt-0.5">Origem: {load.origin}</p>
-              </div>
-              <div>
-                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Destino:</span>
-                <p className="font-bold text-slate-900 mt-0.5">{load.destination}</p>
-                <p className="text-slate-600 text-[11px] mt-0.5">Previsão (ETA): {load.eta}</p>
-              </div>
+        {/* Printable Document Box */}
+        <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4 text-xs">
+          <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+            <div>
+              <h3 className="text-sm font-black text-white">{companyProfile.name}</h3>
+              <p className="text-slate-400">NUIT: {companyProfile.nuit}</p>
+              <p className="text-slate-400">{companyProfile.address}, Matola / Maputo</p>
             </div>
-
-            {/* Frota & Motorista */}
-            <div className="py-1 text-xs text-slate-700 flex flex-wrap justify-between gap-2 border-b border-slate-200 pb-2">
-              <p>Camião: <strong className="font-mono text-slate-900">{load.truck}</strong></p>
-              <p>Motorista: <strong className="text-slate-900">{load.driver}</strong></p>
-            </div>
-
-            {/* Tabela de Mercadorias */}
-            <div className="pt-1">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-700 font-semibold border-y border-slate-200 text-[11px]">
-                    <th className="py-2 px-3">Descrição da Carga</th>
-                    <th className="py-2 px-3">Acondicionamento</th>
-                    <th className="py-2 px-3 text-right font-mono">Peso</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-900">
-                  <tr>
-                    <td className="py-2.5 px-3 font-medium">{load.cargo}</td>
-                    <td className="py-2.5 px-3 text-slate-600">Container 40ft / Paletizado</td>
-                    <td className="py-2.5 px-3 text-right font-mono font-bold">32.000 Kg</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Rodapé Institucional Discreto */}
-            <div className="pt-4 border-t border-slate-200 text-[10px] text-slate-400 text-center">
-              <p>Documento emitido eletronicamente via ERP.</p>
+            <div className="text-right">
+              <span className="text-xs font-mono font-bold text-brand-orange block">GUIA Nº: GT-{load.tripNumber}</span>
+              <span className="text-[11px] text-slate-400 block">Data: {load.createdAt}</span>
             </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <span className="text-slate-500 font-bold block mb-1">CLIENTE / DESTINATÁRIO</span>
+              <span className="font-bold text-white block">{load.customerName}</span>
+              <span className="text-slate-300 block">{load.destination}</span>
+            </div>
+            <div>
+              <span className="text-slate-500 font-bold block mb-1">VIATURA & MOTORISTA</span>
+              <span className="font-mono font-bold text-brand-orange block">{load.vehiclePlate} ({load.vehicleModel})</span>
+              <span className="text-slate-300 block">Condutor: {load.driverName}</span>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-slate-800 space-y-1">
+            <span className="text-slate-500 font-bold block mb-1">DISCRIMINAÇÃO DA CARGA</span>
+            <p className="text-slate-200 font-medium">{load.cargoDescription} ({load.weightKg.toLocaleString('pt-MZ')} kg)</p>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800 mt-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl cursor-pointer"
+          >
+            Fechar
+          </button>
+          <button
+            onClick={handlePrint}
+            className="flex items-center space-x-2 px-5 py-2 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl shadow-glow transition-all cursor-pointer"
+          >
+            <Printer size={14} />
+            <span>Imprimir Guia Oficial</span>
+          </button>
         </div>
       </div>
     </div>

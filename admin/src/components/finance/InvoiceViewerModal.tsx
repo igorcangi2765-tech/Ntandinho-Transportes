@@ -128,19 +128,19 @@ export const InvoiceViewerModal: React.FC<InvoiceViewerModalProps> = ({ invoice,
                 <div className="flex justify-between sm:justify-end gap-4">
                   <span>Subtotal:</span>
                   <span className="font-mono text-slate-900">
-                    {Number(invoice.subtotal).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MT
+                    {Number(invoice.subtotal).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MZN
                   </span>
                 </div>
                 <div className="flex justify-between sm:justify-end gap-4">
                   <span>IVA (16%):</span>
                   <span className="font-mono text-slate-900">
-                    {Number(invoice.taxAmount).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MT
+                    {Number(invoice.taxAmount).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MZN
                   </span>
                 </div>
                 <div className="flex justify-between sm:justify-end gap-4 font-bold text-slate-900 pt-1 border-t border-slate-200 text-sm">
                   <span>TOTAL:</span>
                   <span className="font-mono">
-                    {Number(invoice.totalAmount).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MT
+                    {Number(invoice.totalAmount).toLocaleString('pt-MZ', { minimumFractionDigits: 2 })} MZN
                   </span>
                 </div>
               </div>

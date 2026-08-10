@@ -4,7 +4,7 @@ export function formatCurrency(amount: number, currency: string = 'MZN'): string
     minimumFractionDigits: 0,
   }).format(amount);
 
-  return `${formatted} ${currency === 'MZN' ? 'MT' : currency}`;
+  return `${formatted} ${currency}`;
 }
 
 export function formatDate(dateString: string): string {

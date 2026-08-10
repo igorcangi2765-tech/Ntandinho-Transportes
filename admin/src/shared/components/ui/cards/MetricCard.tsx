@@ -50,10 +50,11 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       </div>
 
       <div className="mt-4">
-        <span className="block text-3xl font-display font-bold text-white tracking-tight group-hover:scale-[1.01] origin-left transition-transform">
+        <span className="block text-xl sm:text-2xl md:text-3xl font-display font-bold text-white tracking-tight break-words max-w-full group-hover:scale-[1.01] origin-left transition-transform">
           {value}
         </span>
       </div>
+
 
       {trend && (
         <div className="mt-4 flex items-center pt-4 border-t border-slate-800/40 gap-2">

@@ -2,7 +2,6 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { cn } from '../../utils/cn';
 import { useAppStore } from '../../stores/useAppStore';
 import { CommandPalette } from '../search/CommandPalette';
 import { NotificationDrawer } from '../search/NotificationDrawer';
@@ -11,12 +10,21 @@ import { useKeyboardShortcut } from '../../hooks/useKeyboardShortcut';
 
 export const AdminLayout: React.FC = () => {
   const {
-    sidebarCollapsed,
     toggleCommandPalette,
     setCommandPaletteOpen,
     setNotificationDrawerOpen,
     setMobileSidebarOpen,
+    theme,
   } = useAppStore();
+
+  // Ensure theme class on root element
+  React.useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   // Shortcut Ctrl+K / Cmd+K -> Toggle Command Palette
   useKeyboardShortcut({
@@ -37,29 +45,19 @@ export const AdminLayout: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-navy-950 text-slate-100 flex font-sans relative">
-      {/* Sidebar Navigation */}
+    <div className="h-screen w-full overflow-hidden bg-background text-text-primary flex font-sans relative selection:bg-[#F6A823] selection:text-[#0B132B]">
+      {/* Fixed Sidebar Navigation */}
       <Sidebar />
 
-      {/* Main Content Area */}
-      <div
-        className={cn(
-          'flex-1 flex flex-col transition-all duration-300 ease-in-out min-w-0',
-          sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'
-        )}
-      >
+      {/* Independent Main Content Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden transition-all duration-300 ease-in-out">
         <Header />
 
-        <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
+        {/* Independent Page Scroll Area */}
+        <main className="flex-1 p-3 sm:p-6 md:p-8 overflow-y-auto overflow-x-hidden relative custom-scrollbar max-w-full w-full">
           <Outlet />
         </main>
 
-        {/* Global Footer info bar */}
-        <footer className="px-6 py-4 border-t border-slate-800/60 bg-navy-900/40 text-xs text-slate-500 flex justify-between items-center">
-          <div>
-            © {new Date().getFullYear()} N' Tandinho Transportes & Logística S.A. Todos os direitos reservados.
-          </div>
-        </footer>
       </div>
 
       {/* Global Drawers & Modals */}

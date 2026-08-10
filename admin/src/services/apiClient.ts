@@ -14,10 +14,19 @@ export class ApiError extends Error {
   }
 }
 
+const getBaseUrl = (): string => {
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl) return envUrl.replace(/\/$/, '');
+  return '';
+};
+
 export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { params, headers, ...restOptions } = options;
 
-  let url = endpoint;
+  const baseUrl = getBaseUrl();
+  const fullEndpoint = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+
+  let url = fullEndpoint;
   if (params) {
     const searchParams = new URLSearchParams(params);
     url += `?${searchParams.toString()}`;
@@ -36,6 +45,14 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
       ...restOptions,
       headers: defaultHeaders,
     });
+
+    if (response.status === 401) {
+      localStorage.removeItem('ntandinho_token');
+      localStorage.removeItem('ntandinho_user');
+      if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/login')) {
+        window.location.href = '/login';
+      }
+    }
 
     const data = await response.json().catch(() => null);
 

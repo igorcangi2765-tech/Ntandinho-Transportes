@@ -5,11 +5,11 @@ import { Truck, X, Plus, AlertCircle } from 'lucide-react';
 import { useErpStore } from '../../shared/stores/useErpStore';
 
 const vehicleSchema = z.object({
-  plateNumber: z.string().min(6, 'Matrícula inválida (ex: ABM-849-MC).'),
-  make: z.string().min(2, 'Marca (ex: Volvo, Scania).'),
-  model: z.string().min(2, 'Modelo (ex: FH16 750 HP).'),
-  year: z.coerce.number().min(2010, 'Ano inválido.'),
-  mileageKm: z.coerce.number().min(0, 'Quilometragem.'),
+  plateNumber: z.string().min(6, 'Insira uma matrícula válida (ex: ABM-849-MC).'),
+  make: z.string().min(2, 'Marca da viatura (Volvo, Scania, DAF).'),
+  model: z.string().min(2, 'Modelo da viatura.'),
+  year: z.coerce.number().min(2000, 'Ano inválido.'),
+  mileageKm: z.coerce.number().min(0, 'Quilometragem inicial.'),
 });
 
 type VehicleFormData = z.infer<typeof vehicleSchema>;
@@ -30,11 +30,11 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({ onClose, onSuc
     formState: { errors },
   } = useForm<VehicleFormData>({
     defaultValues: {
-      plateNumber: 'AGG-119-MC',
+      plateNumber: 'ABM-',
       make: 'Volvo',
       model: 'FH16 750 HP',
-      year: 2025,
-      mileageKm: 15000,
+      year: 2024,
+      mileageKm: 0,
     },
   });
 
@@ -43,11 +43,19 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({ onClose, onSuc
     setErrorMsg(null);
 
     try {
-      addVehicle(data);
+      addVehicle({
+        ...data,
+        plateNumber: data.plateNumber.toUpperCase(),
+        category: 'Camião Pesado',
+        nextOilChangeKm: data.mileageKm + 15000,
+        licenseExpiry: '2027-12-31',
+        insuranceExpiry: '2027-12-31',
+        inspectionExpiry: '2027-12-31',
+      });
       onSuccess();
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Erro ao adicionar veículo.');
+      setErrorMsg(err.message || 'Falha ao registar viatura.');
     } finally {
       setSubmitting(false);
     }
@@ -55,10 +63,10 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({ onClose, onSuc
 
   return (
     <div className="fixed inset-0 z-50 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-navy-900 border border-slate-800 rounded-3xl shadow-glass p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200">
+      <div className="max-w-lg w-full bg-navy-900 border border-slate-800 rounded-3xl shadow-glass p-6 md:p-8 relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+          className="absolute top-6 right-6 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
         >
           <X size={20} />
         </button>
@@ -68,13 +76,13 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({ onClose, onSuc
             <Truck size={22} />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Adicionar Camião à Frota</h2>
-            <p className="text-xs text-slate-400">Registo de cavalo mecânico ou viatura pesada.</p>
+            <h2 className="text-xl font-bold text-white tracking-tight">Cadastrar Nova Viatura na Frota</h2>
+            <p className="text-xs text-slate-400">Registe camião pesado, reboque ou basculante.</p>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2">
+          <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2">
             <AlertCircle size={16} />
             <span>{errorMsg}</span>
           </div>
@@ -92,13 +100,13 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({ onClose, onSuc
             {errors.plateNumber && <p className="text-[11px] text-rose-400 mt-1">{errors.plateNumber.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Marca</label>
               <input
                 type="text"
                 {...register('make')}
-                placeholder="Volvo, Scania, DAF"
+                placeholder="Volvo / Scania / DAF"
                 className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60"
               />
               {errors.make && <p className="text-[11px] text-rose-400 mt-1">{errors.make.message}</p>}
@@ -109,14 +117,14 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({ onClose, onSuc
               <input
                 type="text"
                 {...register('model')}
-                placeholder="FH16, R500"
+                placeholder="FH16 750 HP"
                 className="w-full px-3.5 py-2.5 bg-slate-950 text-slate-100 rounded-xl border border-slate-800 text-xs focus:border-brand-orange/60"
               />
               {errors.model && <p className="text-[11px] text-rose-400 mt-1">{errors.model.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Ano de Fabrico</label>
               <input
@@ -127,7 +135,7 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({ onClose, onSuc
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Quilometragem (KM)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Quilometragem Actual (Km)</label>
               <input
                 type="number"
                 {...register('mileageKm')}
@@ -150,7 +158,7 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({ onClose, onSuc
               className="flex items-center space-x-2 px-5 py-2 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl shadow-glow transition-all cursor-pointer"
             >
               <Plus size={14} />
-              <span>{submitting ? 'A guardar...' : 'Registar Camião'}</span>
+              <span>{submitting ? 'A guardar...' : 'Registar Viatura'}</span>
             </button>
           </div>
         </form>

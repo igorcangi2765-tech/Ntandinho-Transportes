@@ -1,582 +1,528 @@
-import React, { useState } from 'react';
-import {
-  Settings,
-  Save,
-  Bell,
-  RefreshCw,
-  Building2,
-  Users,
-  Shield,
-  Plus,
-  Lock,
-  Unlock,
-  Mail,
-  MapPin,
-  Phone,
-  FileSpreadsheet,
-  Image as ImageIcon,
-} from 'lucide-react';
-import { PageHeader } from '../shared/layouts/PageHeader';
-import { useNotificationStore } from '../shared/stores/useNotificationStore';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useErpStore } from '../shared/stores/useErpStore';
-import { CompanyDocumentHeader } from '../components/shared/CompanyDocumentHeader';
+import { useUserProfileStore, UserProfile } from '../shared/stores/useUserProfileStore';
+import { useNotificationStore } from '../stores/useNotificationStore';
+import { StandardPageLayout } from '../components/ui/StandardPageLayout';
+import { MetricCard } from '../components/ui/MetricCard';
+import { DataTable, Column } from '../components/ui/DataTable';
+import { Modal } from '../components/ui/Modal';
+import {
+  Building2,
+  ShieldCheck,
+  Save,
+  MapPin,
+  FileCheck2,
+  Users,
+  KeyRound,
+  UserPlus,
+  CheckCircle2,
+  XCircle,
+} from 'lucide-react';
 
-interface StaffUser {
+
+interface ErpUserItem {
   id: string;
   name: string;
   email: string;
-  role: 'Administrador' | 'Gestor de Frota' | 'Contabilista' | 'Operador de Cargas';
-  status: 'ATIVO' | 'SUSPENSO';
-  powers: string[];
+  role: 'ADMIN' | 'MANAGER' | 'FINANCE' | 'DISPATCH' | 'READONLY';
+  roleName: string;
+  lastLogin: string;
+  isActive: boolean;
 }
 
 export const SettingsPage: React.FC = () => {
-  const { addToast } = useNotificationStore();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { companyProfile, updateCompanyProfile } = useErpStore();
+  const { availableProfiles } = useUserProfileStore();
+  const { addToast } = useNotificationStore();
 
-  const [activeTab, setActiveTab] = useState<'company' | 'staff' | 'system'>('company');
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<'company' | 'users' | 'rbac'>('company');
 
-  // Ficha da Empresa (Dados da Empresa com Nampula)
-  const [companyName, setCompanyName] = useState(companyProfile.name);
-  const [nuit, setNuit] = useState(companyProfile.nuit);
-  const [address, setAddress] = useState(companyProfile.address);
-  const [city, setCity] = useState(companyProfile.city);
-  const [phone1, setPhone1] = useState(companyProfile.phones[0] || '+258 84 000 0000');
-  const [phone2, setPhone2] = useState(companyProfile.phones[1] || '+258 82 000 0000');
-  const [email1, setEmail1] = useState(companyProfile.emails[0] || 'comercial@ntandinho.co.mz');
-  const [email2, setEmail2] = useState(companyProfile.emails[1] || 'geral@ntandinho.co.mz');
-  const [capitalSocial, setCapitalSocial] = useState(companyProfile.capitalSocial);
-  const [logoUrl, setLogoUrl] = useState(companyProfile.logoUrl || '');
-  const [taxRate, setTaxRate] = useState('16');
-  const [currency, setCurrency] = useState('MZN');
+  useEffect(() => {
+    if (tabParam === 'users' || tabParam === 'utilizadores') setActiveTab('users');
+    else if (tabParam === 'rbac' || tabParam === 'permissoes') setActiveTab('rbac');
+    else setActiveTab('company');
+  }, [tabParam]);
 
-  // Staff RBAC State
-  const [staffList, setStaffList] = useState<StaffUser[]>([
-    {
-      id: 'usr-1',
-      name: 'Dr. António N\'tandinho',
-      email: 'admin@ntandinho.co.mz',
-      role: 'Administrador',
-      status: 'ATIVO',
-      powers: ['Acesso Total', 'Aprovação Financeira', 'Gestão RBAC'],
-    },
-    {
-      id: 'usr-2',
-      name: 'Mateus Sitoe',
-      email: 'frota@ntandinho.co.mz',
-      role: 'Gestor de Frota',
-      status: 'ATIVO',
-      powers: ['Despacho de Viagens', 'Alocação de Camiões', 'Inspeções'],
-    },
-    {
-      id: 'usr-3',
-      name: 'Lúcia Mabunda',
-      email: 'financas@ntandinho.co.mz',
-      role: 'Contabilista',
-      status: 'ATIVO',
-      powers: ['Emissão de Faturas', 'Recibos de Pagamento', 'Relatório DRE'],
-    },
-    {
-      id: 'usr-4',
-      name: 'Carlos Alberto Nhantumbo',
-      email: 'cargas@ntandinho.co.mz',
-      role: 'Operador de Cargas',
-      status: 'ATIVO',
-      powers: ['Emissão de Guias', 'Rastreio GPS'],
-    },
-  ]);
-
-  const [showAddStaffModal, setShowAddStaffModal] = useState(false);
-  const [newStaffName, setNewStaffName] = useState('');
-  const [newStaffEmail, setNewStaffEmail] = useState('');
-  const [newStaffRole, setNewStaffRole] = useState<'Administrador' | 'Gestor de Frota' | 'Contabilista' | 'Operador de Cargas'>('Gestor de Frota');
-
-  const handleSaveCompanyDetails = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateCompanyProfile({
-      name: companyName,
-      nuit,
-      address,
-      city,
-      phones: [phone1, phone2],
-      emails: [email1, email2],
-      capitalSocial,
-      logoUrl,
-    });
-    addToast('Dados da Empresa Guardados', `Ficha oficial de "${companyName}" em Nampula atualizada!`, 'success');
+  const handleTabChange = (tab: 'company' | 'users' | 'rbac') => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
   };
 
-  const handleToggleStaffStatus = (id: string) => {
-    setStaffList((prev) =>
+  const [nomeComercial, setNomeComercial] = useState(companyProfile.nomeComercial || "N' Tandinho");
+  const [nomeJuridico, setNomeJuridico] = useState(companyProfile.nomeJuridico || "Transportes e Logística N' Tandinho Lda");
+  const [slogan, setSlogan] = useState(companyProfile.slogan || "Transporte Seguro, Eficiente e Confiável");
+  const [address, setAddress] = useState(companyProfile.address || "Av. Eduardo Mondlane, Edifício Central");
+  const [city, setCity] = useState(companyProfile.city || "Nampula");
+  const [province, setProvince] = useState(companyProfile.province || "Nampula");
+  const [country, setCountry] = useState(companyProfile.country || "Moçambique");
+  const [phones, setPhones] = useState(companyProfile.phones.join(', '));
+  const [emails, setEmails] = useState(companyProfile.emails.join(', '));
+  const [website, setWebsite] = useState(companyProfile.website || "https://ntandinho.zyphtech.com");
+  const [whatsapp, setWhatsapp] = useState(companyProfile.whatsapp || "+258 84 000 0000");
+  const [operationArea, setOperationArea] = useState(companyProfile.operationArea || "Nacional (Moçambique) & Internacional (Região da SADC)");
+  const [mission, setMission] = useState(companyProfile.mission || "Oferecer soluções logísticas e transporte pesado com máxima excelência.");
+  const [vision, setVision] = useState(companyProfile.vision || "Ser a principal operadora logística de referência em Moçambique e região SADC.");
+  const [nuit, setNuit] = useState(companyProfile.nuit || "400881920");
+  const [bankAccountDetails, setBankAccountDetails] = useState(companyProfile.bankAccountDetails || "Millennium BIM: 102938475 | BCI: 987654321");
+
+  const [usersList, setUsersList] = useState<ErpUserItem[]>([
+    { id: 'usr-1', name: "Sérgio N'tandinho", email: 'sergio@ntandinho.co.mz', role: 'ADMIN', roleName: 'Administrador ERP', lastLogin: 'Hoje, 08:30', isActive: true },
+    { id: 'usr-2', name: 'Mateus Nhantumbo', email: 'mateus.operacoes@ntandinho.co.mz', role: 'MANAGER', roleName: 'Gestor de Operações', lastLogin: 'Hoje, 09:15', isActive: true },
+    { id: 'usr-3', name: 'Beatriz Mabunda', email: 'beatriz.financeiro@ntandinho.co.mz', role: 'FINANCE', roleName: 'Contabilista Sénior', lastLogin: 'Ontem, 16:45', isActive: true },
+    { id: 'usr-4', name: 'Celso Macamo', email: 'celso.despacho@ntandinho.co.mz', role: 'DISPATCH', roleName: 'Despachante Nampula', lastLogin: 'Hoje, 07:40', isActive: true },
+  ]);
+
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserRole, setNewUserRole] = useState<'ADMIN' | 'MANAGER' | 'FINANCE' | 'DISPATCH' | 'READONLY'>('DISPATCH');
+
+  const [rbacMatrix, setRbacMatrix] = useState([
+    { module: 'Operações & Viagens', create: true, edit: true, delete: false, export: true },
+    { module: 'Comercial & Cotações', create: true, edit: true, delete: false, export: true },
+    { module: 'Gestão Financeira & Faturas', create: true, edit: true, delete: false, export: true },
+    { module: 'Frota & Manutenção', create: true, edit: true, delete: false, export: true },
+    { module: 'Administração & Sistema', create: true, edit: true, delete: true, export: true },
+  ]);
+
+  const handleSaveCompany = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateCompanyProfile({
+      name: nomeJuridico,
+      nomeComercial,
+      nomeJuridico,
+      slogan,
+      address,
+      city,
+      province,
+      country,
+      phones: phones.split(',').map((p) => p.trim()),
+      emails: emails.split(',').map((m) => m.trim()),
+      website,
+      whatsapp,
+      operationArea,
+      mission,
+      vision,
+      nuit,
+      bankAccountDetails,
+    });
+    addToast('Definições Guardadas', 'Dados institucionais da N\' Tandinho atualizados no ERP com sucesso.', 'success');
+  };
+
+  const handleAddUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserName || !newUserEmail) return;
+
+    const roleNameMap = {
+      ADMIN: 'Administrador ERP',
+      MANAGER: 'Gestor de Operações',
+      FINANCE: 'Contabilista Sénior',
+      DISPATCH: 'Despachante Nampula',
+      READONLY: 'Consultor de Leitura',
+    };
+
+    const newUser: ErpUserItem = {
+      id: `usr-${Date.now()}`,
+      name: newUserName,
+      email: newUserEmail,
+      role: newUserRole,
+      roleName: roleNameMap[newUserRole],
+      lastLogin: 'Nunca',
+      isActive: true,
+    };
+
+    setUsersList([...usersList, newUser]);
+    addToast('Utilizador Adicionado', `Conta para ${newUserName} criada com perfil ${roleNameMap[newUserRole]}.`, 'success');
+    setIsAddUserModalOpen(false);
+    setNewUserName('');
+    setNewUserEmail('');
+  };
+
+  const handleToggleUserStatus = (id: string) => {
+    setUsersList((prev) =>
       prev.map((u) => {
-        if (u.id !== id) return u;
-        const newStatus = u.status === 'ATIVO' ? 'SUSPENSO' : 'ATIVO';
-        addToast(
-          'Permissões Alteradas',
-          `Poderes de ${u.name} foram ${newStatus === 'ATIVO' ? 'reativados' : 'suspensos'} pelo Administrador.`,
-          newStatus === 'ATIVO' ? 'success' : 'warning'
-        );
-        return { ...u, status: newStatus };
+        if (u.id === id) {
+          const nextStatus = !u.isActive;
+          addToast('Estado do Utilizador', `Conta de ${u.name} ${nextStatus ? 'ativada' : 'bloqueada'}.`, nextStatus ? 'success' : 'warning');
+          return { ...u, isActive: nextStatus };
+        }
+        return u;
       })
     );
   };
 
-  const handleAddStaff = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newStaffName || !newStaffEmail) return;
-
-    const newStaff: StaffUser = {
-      id: `usr-${Date.now()}`,
-      name: newStaffName,
-      email: newStaffEmail,
-      role: newStaffRole,
-      status: 'ATIVO',
-      powers: ['Acesso ao Módulo ' + newStaffRole],
-    };
-
-    setStaffList((prev) => [newStaff, ...prev]);
-    addToast('Novo Utilizador', `Membro da equipa "${newStaffName}" registado como ${newStaffRole}!`, 'success');
-    setShowAddStaffModal(false);
-    setNewStaffName('');
-    setNewStaffEmail('');
+  const handleToggleRbacPermission = (index: number, key: 'create' | 'edit' | 'delete' | 'export') => {
+    setRbacMatrix((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [key]: !copy[index][key] };
+      return copy;
+    });
+    addToast('Matriz RBAC Atualizada', 'Permissões de acesso ajustadas com sucesso.', 'info');
   };
 
-  const handleExportCompanyDataCSV = () => {
-    addToast('Exportar Dados', 'Ficha cadastral de Nampula e lista de utilizadores exportadas em CSV!', 'success');
-  };
+  const userColumns: Column<ErpUserItem>[] = [
+    {
+      key: 'name',
+      header: 'Utilizador ERP',
+      accessor: (row) => (
+        <div>
+          <span className="font-bold text-slate-900 dark:text-white block">{row.name}</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{row.email}</span>
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'roleName',
+      header: 'Perfil de Acesso',
+      accessor: (row) => (
+        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#0B132B] dark:bg-[#F6A823] text-white dark:text-[#0B132B] font-mono">
+          {row.roleName}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'lastLogin',
+      header: 'Último Acesso',
+      accessor: (row) => <span className="font-mono text-slate-600 dark:text-slate-300 font-medium">{row.lastLogin}</span>,
+    },
+    {
+      key: 'isActive',
+      header: 'Estado da Conta',
+      accessor: (row) => (
+        <button
+          onClick={() => handleToggleUserStatus(row.id)}
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold cursor-pointer border ${
+            row.isActive
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
+              : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30'
+          }`}
+        >
+          {row.isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+          <span>{row.isActive ? 'ACTIVO' : 'BLOQUEADO'}</span>
+        </button>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 max-w-[1600px] mx-auto pb-12">
-      <PageHeader
-        title="Configurações do ERP & Perfil da Empresa"
-        subtitle="Identificação fiscal, gestão de equipa (RBAC/Poderes), dados fiscais e segurança."
-        icon={Settings}
-        actions={
-          <div className="flex items-center space-x-2">
+    <StandardPageLayout
+      title="Administração Geral & Definições do Sistema"
+      description="Configuração oficial da N' Tandinho S.A., gestão de utilizadores ERP e permissões de acesso RBAC."
+      icon={ShieldCheck}
+      actions={
+        <div className="flex items-center gap-2">
+          {activeTab === 'users' && (
             <button
-              onClick={handleExportCompanyDataCSV}
-              className="flex items-center space-x-2 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-all cursor-pointer"
+              onClick={() => setIsAddUserModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-[#F6A823] hover:bg-[#D08500] text-slate-950 font-bold text-xs rounded-xl shadow-glow cursor-pointer transition-all"
             >
-              <FileSpreadsheet size={14} className="text-emerald-400" />
-              <span>Exportar Dados (CSV)</span>
+              <UserPlus size={15} strokeWidth={2.5} />
+              <span>Novo Utilizador</span>
             </button>
-            <button
-              onClick={handleSaveCompanyDetails}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-brand-orange to-amber-600 hover:from-brand-orange-hover hover:to-amber-700 text-slate-950 font-bold text-xs rounded-xl shadow-glow transition-all hover:scale-[1.02] cursor-pointer"
-            >
-              <Save size={16} />
-              <span>Guardar Alterações</span>
-            </button>
-          </div>
-        }
-      />
-
-      {/* Navigation Tabs */}
-      <div className="flex space-x-2 border-b border-slate-800 pb-2">
+          )}
+        </div>
+      }
+      kpiCards={
+        <>
+          <MetricCard
+            title="Sede Principal"
+            value="Nampula"
+            subtext="Av. Eduardo Mondlane"
+            icon={MapPin}
+            iconBg="bg-amber-500/10 dark:bg-[#16223B]"
+            iconColor="text-[#F6A823]"
+          />
+          <MetricCard
+            title="Utilizadores ERP"
+            value={usersList.length}
+            subtext={`${usersList.filter((u) => u.isActive).length} Contas Activas`}
+            icon={Users}
+            iconBg="bg-blue-500/10 dark:bg-[#16223B]"
+            iconColor="text-[#0EA5E9]"
+          />
+          <MetricCard
+            title="Segurança RBAC"
+            value="Nível 5"
+            subtext="Perfis Credenciados"
+            icon={ShieldCheck}
+            iconBg="bg-emerald-500/10 dark:bg-[#16223B]"
+            iconColor="text-[#16A34A]"
+          />
+          <MetricCard
+            title="Identificação Fiscal"
+            value={nuit}
+            subtext="NUIT Institucional"
+            icon={FileCheck2}
+            iconBg="bg-purple-500/10 dark:bg-[#16223B]"
+            iconColor="text-purple-500"
+          />
+        </>
+      }
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white dark:bg-[#0B132B] p-2 rounded-2xl border border-slate-200 dark:border-[#1C2A48] shadow-subtle mb-6 w-full">
         <button
-          onClick={() => setActiveTab('company')}
-          className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+          onClick={() => handleTabChange('company')}
+          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center leading-tight w-full ${
             activeTab === 'company'
-              ? 'bg-brand-orange/20 text-brand-orange border border-brand-orange/30 shadow-glow'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              ? 'bg-slate-900 dark:bg-[#F6A823] text-white dark:text-slate-950 shadow-xs'
+              : 'bg-slate-50 dark:bg-[#16223B] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Building2 size={16} />
-          <span>Ficha & Dados da Empresa</span>
+          <Building2 size={14} className="shrink-0" />
+          <span>Empresa & Ficha Institucional</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('staff')}
-          className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-            activeTab === 'staff'
-              ? 'bg-brand-orange/20 text-brand-orange border border-brand-orange/30 shadow-glow'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+          onClick={() => handleTabChange('users')}
+          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center leading-tight w-full ${
+            activeTab === 'users'
+              ? 'bg-slate-900 dark:bg-[#F6A823] text-white dark:text-slate-950 shadow-xs'
+              : 'bg-slate-50 dark:bg-[#16223B] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Users size={16} />
-          <span>Gestão de Pessoal & Poderes RBAC ({staffList.length})</span>
+          <Users size={14} className="shrink-0" />
+          <span>Utilizadores ERP ({usersList.length})</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('system')}
-          className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-            activeTab === 'system'
-              ? 'bg-brand-orange/20 text-brand-orange border border-brand-orange/30 shadow-glow'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+          onClick={() => handleTabChange('rbac')}
+          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center leading-tight w-full ${
+            activeTab === 'rbac'
+              ? 'bg-slate-900 dark:bg-[#F6A823] text-white dark:text-slate-950 shadow-xs'
+              : 'bg-slate-50 dark:bg-[#16223B] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Shield size={16} />
-          <span>Segurança & Parâmetros Fiscais</span>
+          <KeyRound size={14} className="shrink-0" />
+          <span>Permissões de Acesso (RBAC)</span>
         </button>
       </div>
 
-      {/* TAB 1: DADOS DA EMPRESA */}
+
+
       {activeTab === 'company' && (
-        <form onSubmit={handleSaveCompanyDetails} className="space-y-6">
-          <div className="p-6 rounded-2xl bg-navy-900/80 border border-slate-800 shadow-glass space-y-5">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Building2 size={18} className="text-brand-orange" /> Ficha Cadastral Oficial da Empresa
+        <form onSubmit={handleSaveCompany} className="space-y-4">
+          <div className="erp-card p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-[#16223B] pb-3">
+              <Building2 className="text-[#F6A823]" size={20} />
+              Identidade Corporativa & Posicionamento Oficial
             </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Nome Comercial</label>
+                <input type="text" value={nomeComercial} onChange={(e) => setNomeComercial(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-extrabold focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Nome Jurídico Aprovado</label>
+                <input type="text" value={nomeJuridico} onChange={(e) => setNomeJuridico(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-extrabold focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Slogan da Empresa</label>
+                <input type="text" value={slogan} onChange={(e) => setSlogan(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div className="lg:col-span-3">
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Área de Operação</label>
+                <input type="text" value={operationArea} onChange={(e) => setOperationArea(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+            </div>
+          </div>
 
+          <div className="erp-card p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-[#16223B] pb-3">
+              <MapPin className="text-[#0EA5E9]" size={20} />
+              Sede Principal em Nampula & Contactos Oficiais
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+              <div className="lg:col-span-2">
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Endereço da Sede Principal</label>
+                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Cidade Sede</label>
+                <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Província</label>
+                <input type="text" value={province} onChange={(e) => setProvince(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">País</label>
+                <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Telefone WhatsApp</label>
+                <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Telefones (vírgula)</label>
+                <input type="text" value={phones} onChange={(e) => setPhones(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Emails (vírgula)</label>
+                <input type="text" value={emails} onChange={(e) => setEmails(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Website Oficial</label>
+                <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+            </div>
+          </div>
+
+          <div className="erp-card p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-[#16223B] pb-3">
+              <Building2 className="text-[#16A34A]" size={20} />
+              Missão e Visão Institucional
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Missão Institucional</label>
+                <textarea rows={2} value={mission} onChange={(e) => setMission(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Visão de Futuro</label>
+                <textarea rows={2} value={vision} onChange={(e) => setVision(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
+              </div>
+            </div>
+          </div>
+
+          <div className="erp-card p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-[#16223B] pb-3">
+              <FileCheck2 className="text-[#8B5CF6]" size={20} />
+              Registos Fiscais & Bancários Oficiais
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">NUIT Oficial</label>
+                <input type="text" value={nuit} onChange={(e) => setNuit(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-[#F6A823]" />
+              </div>
               <div className="md:col-span-2">
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-                  <ImageIcon size={13} className="text-brand-orange" /> Logótipo da Empresa (URL / Imagem Personalizada)
-                </label>
-                <input
-                  type="text"
-                  value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="https://exemplo.co.mz/logo.png (deixe vazio para usar o logótipo vetorial padrão)"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60 font-mono text-xs"
-                />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Este logótipo e dados de contacto são aplicados automaticamente em todas as <strong>Faturas</strong>, <strong>Recibos</strong>, <strong>Guias de Transporte</strong> e <strong>Cotações</strong> do sistema.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nome Oficial / Razão Social</label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60 font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">NUIT Fiscal (Moçambique)</label>
-                <input
-                  type="text"
-                  value={nuit}
-                  onChange={(e) => setNuit(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 font-mono focus:border-brand-orange/60 font-bold text-brand-orange"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-                  <MapPin size={13} className="text-slate-500" /> Localização Principal (Endereço)
-                </label>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60 font-medium text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Cidade / Província</label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60 font-medium text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-                  <Phone size={13} className="text-slate-500" /> Linha de Atendimento Principal
-                </label>
-                <input
-                  type="text"
-                  value={phone1}
-                  onChange={(e) => setPhone1(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-                  <Phone size={13} className="text-slate-500" /> Linha de Atendimento Secundária
-                </label>
-                <input
-                  type="text"
-                  value={phone2}
-                  onChange={(e) => setPhone2(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-                  <Mail size={13} className="text-slate-500" /> E-mail Comercial
-                </label>
-                <input
-                  type="email"
-                  value={email1}
-                  onChange={(e) => setEmail1(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1 flex items-center gap-1">
-                  <Mail size={13} className="text-slate-500" /> E-mail Geral / Institucional
-                </label>
-                <input
-                  type="email"
-                  value={email2}
-                  onChange={(e) => setEmail2(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Capital Social Registado</label>
-                <input
-                  type="text"
-                  value={capitalSocial}
-                  onChange={(e) => setCapitalSocial(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 font-mono focus:border-brand-orange/60"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Moeda Principal</label>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 focus:border-brand-orange/60 cursor-pointer"
-                >
-                  <option value="MZN">Metical (MZN)</option>
-                  <option value="USD">Dólar Americano (USD)</option>
-                </select>
+                <label className="text-slate-600 dark:text-slate-400 font-semibold block mb-1">Contas Bancárias de Faturação</label>
+                <input type="text" value={bankAccountDetails} onChange={(e) => setBankAccountDetails(e.target.value)} className="w-full bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#F6A823]" />
               </div>
             </div>
-
-            {/* Live Preview Block */}
-            <div className="pt-4 border-t border-slate-800 space-y-3">
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
-                Pré-visualização do Cabeçalho Oficial nos Pop-ups & Documentos:
-              </span>
-              <CompanyDocumentHeader
-                documentType="DOCUMENTO EXEMPLO"
-                documentNumber="FT-2026-PREVIEW"
-                documentDate="07/Ago/2026"
-                isPrintSheet={false}
-                className="bg-slate-950 p-5 rounded-xl border border-slate-800 mb-0"
-              />
-            </div>
-
-            <div className="flex justify-end pt-3">
-              <button
-                type="submit"
-                className="px-5 py-2.5 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl shadow-glow cursor-pointer"
-              >
-                Guardar Ficha da Empresa
-              </button>
-            </div>
+          </div>
+          <div className="flex justify-end pt-2">
+            <button type="submit" className="flex items-center gap-2 px-6 py-3 bg-[#F6A823] hover:bg-[#D08500] text-[#0B132B] font-extrabold text-sm rounded-xl shadow-glow cursor-pointer transition-all duration-200">
+              <Save size={16} /> Guardar Definições da Empresa
+            </button>
           </div>
         </form>
       )}
 
-      {/* TAB 2: GESTÃO DE PESSOAL & RBAC */}
-      {activeTab === 'staff' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-navy-900/80 border border-slate-800">
-            <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Users size={18} className="text-brand-orange" /> Gestão de Utilizadores & Atribuição de Poderes
-              </h3>
-              <p className="text-xs text-slate-400">Administração de papéis (RBAC): Administrador, Gestor de Frota, Contabilista e Operadores.</p>
-            </div>
+      {activeTab === 'users' && (
+        <div className="space-y-4">
+          <DataTable
+            data={usersList}
+            columns={userColumns}
+            keyExtractor={(row) => row.id}
+            searchPlaceholder="Pesquisar utilizador por nome, email ou perfil..."
+            quickActions={[
+              {
+                label: 'Ativar / Bloquear Utilizador',
+                onClick: (row) => handleToggleUserStatus(row.id),
+              },
+              {
+                label: 'Eliminar Utilizador',
+                isDestructive: true,
+                onClick: (row) => {
+                  setUsersList((prev) => prev.filter((u) => u.id !== row.id));
+                  addToast('Utilizador Removido', `Conta de ${row.name} removida do sistema.`, 'info');
+                },
+              },
+            ]}
+          />
+        </div>
+      )}
 
-            <button
-              onClick={() => setShowAddStaffModal(true)}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl shadow-glow cursor-pointer shrink-0"
-            >
-              <Plus size={16} />
-              <span>Adicionar Membro da Equipa</span>
-            </button>
-          </div>
-
-          <div className="rounded-2xl bg-navy-900/80 border border-slate-800 overflow-hidden shadow-glass">
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
-                <thead className="bg-slate-800/50 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
-                  <tr>
-                    <th className="p-4">Nome do Funcionário</th>
-                    <th className="p-4">E-mail de Acesso</th>
-                    <th className="p-4">Cargo / Função</th>
-                    <th className="p-4">Poderes Atribuidos</th>
-                    <th className="p-4">Estado</th>
-                    <th className="p-4 text-right">Ações Admin</th>
+      {activeTab === 'rbac' && (
+        <div className="space-y-4">
+          <div className="erp-card p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-[#16223B] pb-3">
+              <ShieldCheck className="text-[#F6A823]" size={20} />
+              Matriz de Controlo de Acessos por Módulo (RBAC)
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="bg-slate-100 dark:bg-[#16223B] border-b border-slate-200 dark:border-[#1C2A48] text-slate-700 dark:text-slate-300 font-extrabold uppercase">
+                    <th className="py-3 px-4">Módulo ERP</th>
+                    <th className="py-3 px-4 text-center">Criar</th>
+                    <th className="py-3 px-4 text-center">Editar</th>
+                    <th className="py-3 px-4 text-center">Eliminar</th>
+                    <th className="py-3 px-4 text-center">Exportar</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {staffList.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="p-4 font-bold text-white text-sm">{user.name}</td>
-                      <td className="p-4 text-slate-300 font-mono">{user.email}</td>
-                      <td className="p-4">
-                        <span className="px-2.5 py-1 rounded-full bg-brand-orange/15 text-brand-orange font-semibold text-[11px] border border-brand-orange/30">
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="p-4 space-x-1">
-                        {user.powers.map((p, idx) => (
-                          <span key={idx} className="inline-block text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
-                            {p}
-                          </span>
-                        ))}
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
-                            user.status === 'ATIVO'
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                          }`}
-                        >
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => handleToggleStaffStatus(user.id)}
-                          className={`px-3 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition-colors ml-auto cursor-pointer ${
-                            user.status === 'ATIVO'
-                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20'
-                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                          }`}
-                        >
-                          {user.status === 'ATIVO' ? (
-                            <>
-                              <Lock size={12} /> Suspender Poderes
-                            </>
-                          ) : (
-                            <>
-                              <Unlock size={12} /> Reativar Poderes
-                            </>
-                          )}
-                        </button>
-                      </td>
+                <tbody className="divide-y divide-slate-200 dark:divide-[#1C2A48]">
+                  {rbacMatrix.map((row, idx) => (
+                    <tr key={row.module} className="hover:bg-slate-50 dark:hover:bg-[#16223B]/50 transition-colors">
+                      <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{row.module}</td>
+                      {(['create', 'edit', 'delete', 'export'] as const).map((key) => (
+                        <td key={key} className="py-3 px-4 text-center">
+                          <button onClick={() => handleToggleRbacPermission(idx, key)} className={`w-6 h-6 rounded-lg inline-flex items-center justify-center cursor-pointer transition-all border ${row[key] ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300 dark:border-slate-700'}`}>
+                            {row[key] ? '✓' : '✕'}
+                          </button>
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* TAB 3: SEGURANÇA & IVA */}
-      {activeTab === 'system' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 rounded-2xl bg-navy-900/80 border border-slate-800 shadow-glass space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Shield size={16} className="text-brand-orange" /> Parâmetros Fiscais & IVA Moçambique
+          <div className="erp-card p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-[#16223B] pb-3">
+              <KeyRound className="text-[#0EA5E9]" size={20} />
+              Perfis de Segurança Credenciados
             </h3>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Taxa IVA Padrão (%)</label>
-                <input
-                  type="number"
-                  value={taxRate}
-                  onChange={(e) => setTaxRate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 font-mono font-bold focus:border-brand-orange/60"
-                />
-              </div>
-
-              <button
-                onClick={() => addToast('IVA Atualizado', 'Parâmetro de cálculo de IVA fixado em ' + taxRate + '%', 'success')}
-                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl border border-slate-700 transition-colors cursor-pointer"
-              >
-                Atualizar Taxa Fiscal IVA
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-navy-900/80 border border-slate-800 shadow-glass space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Bell size={16} className="text-brand-orange" /> Cópias de Segurança (Backup)
-            </h3>
-
-            <div className="space-y-3 text-xs">
-              <p className="text-slate-400">Realize um backup completo encriptado dos dados de clientes, viaturas, faturas e despachos.</p>
-              <button
-                onClick={() => addToast('Backup Executado', 'Cópia de segurança da base de dados guardada com sucesso!', 'success')}
-                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <RefreshCw size={14} />
-                <span>Executar Backup do Sistema Agora</span>
-              </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              {availableProfiles.map((prof: UserProfile) => (
+                <div key={prof.id} className="p-3.5 bg-slate-50 dark:bg-[#16223B] border border-slate-200 dark:border-[#273759] rounded-xl space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <span className="font-extrabold text-slate-900 dark:text-white text-sm">{prof.name}</span>
+                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#0B132B] dark:bg-[#F6A823] text-white dark:text-[#0B132B] font-mono">
+                      {prof.role}
+                    </span>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px] font-medium">
+                    <strong>Permissões de Acesso:</strong> {prof.powers.join(' • ')}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal Adicionar Pessoal */}
-      {showAddStaffModal && (
-        <div className="fixed inset-0 z-50 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-navy-900 border border-slate-800 rounded-3xl shadow-glass p-6 relative">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-              <Users className="text-brand-orange" /> Adicionar Utilizador à Equipa
-            </h3>
-
-            <form onSubmit={handleAddStaff} className="space-y-4 text-xs">
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nome Completo</label>
-                <input
-                  type="text"
-                  required
-                  value={newStaffName}
-                  onChange={(e) => setNewStaffName(e.target.value)}
-                  placeholder="Ex: Manuel Nhantumbo"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">E-mail Corporativo</label>
-                <input
-                  type="email"
-                  required
-                  value={newStaffEmail}
-                  onChange={(e) => setNewStaffEmail(e.target.value)}
-                  placeholder="nome@ntandinho.co.mz"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Cargo / Nível de Acesso (RBAC)</label>
-                <select
-                  value={newStaffRole}
-                  onChange={(e: any) => setNewStaffRole(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 text-white rounded-xl border border-slate-800 cursor-pointer"
-                >
-                  <option value="Administrador">Administrador (Poderes Totais)</option>
-                  <option value="Gestor de Frota">Gestor de Frota (Alocação & Despacho)</option>
-                  <option value="Contabilista">Contabilista (Faturação & DRE)</option>
-                  <option value="Operador de Cargas">Operador de Cargas (Guias & GPS)</option>
-                </select>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setShowAddStaffModal(false)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-brand-orange text-slate-950 font-bold rounded-xl shadow-glow cursor-pointer"
-                >
-                  Conceder Acesso
-                </button>
-              </div>
-            </form>
+      <Modal isOpen={isAddUserModalOpen} onClose={() => setIsAddUserModalOpen(false)} title="Registar Novo Utilizador no ERP" subtitle="Atribua credenciais e perfil de acesso seguro">
+        <form onSubmit={handleAddUser} className="space-y-4 text-xs">
+          <div>
+            <label className="text-slate-400 font-medium block mb-1">Nome Completo</label>
+            <input type="text" value={newUserName} onChange={(e) => setNewUserName(e.target.value)} placeholder="Ex: Armindo Mabunda" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white" />
           </div>
-        </div>
-      )}
-    </div>
+          <div>
+            <label className="text-slate-400 font-medium block mb-1">Email Institucional</label>
+            <input type="email" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} placeholder="armindo@ntandinho.co.mz" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono" />
+          </div>
+          <div>
+            <label className="text-slate-400 font-medium block mb-1">Perfil de Acesso RBAC</label>
+            <select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value as any)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white font-semibold cursor-pointer">
+              <option value="ADMIN">Administrador ERP</option>
+              <option value="MANAGER">Gestor de Operações</option>
+              <option value="FINANCE">Contabilista Sénior</option>
+              <option value="DISPATCH">Despachante Nampula</option>
+              <option value="READONLY">Consultor de Leitura</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+            <button type="button" onClick={() => setIsAddUserModalOpen(false)} className="px-4 py-2 bg-slate-800 text-slate-300 font-semibold rounded-xl">Cancelar</button>
+            <button type="submit" className="px-5 py-2 bg-[#F6A823] hover:bg-[#D08500] text-slate-950 font-bold rounded-xl shadow-glow cursor-pointer">Criar Conta</button>
+          </div>
+        </form>
+      </Modal>
+    </StandardPageLayout>
   );
 };

@@ -1,0 +1,478 @@
+// Prisma Schema para N' Tandinho ERP & Backoffice System
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------
+// UTILIZADORES & SEGURANÇA (RBAC)
+// ----------------------------------------------------
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique // Administrador, Gestor, Financeiro, Operador, Motorista
+  description String?
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
+  id         String   @id @default(uuid())
+  roleId     String
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission String   // e.g. "trips:read", "trips:write", "invoices:manage", "cms:edit"
+  createdAt  DateTime @default(now())
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  phone        String?
+  password     String
+  roleId       String
+  role         Role          @relation(fields: [roleId], references: [id])
+  avatar       String?
+  status       String        @default("Active") // Active, Inactive, Suspended
+  lastLogin    DateTime?
+  activityLogs ActivityLog[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// ----------------------------------------------------
+// OPERAÇÕES & FROTA
+// ----------------------------------------------------
+
+model Vehicle {
+  id               String        @id @default(uuid())
+  plateNumber      String        @unique
+  brand            String
+  model            String
+  year             Int
+  capacity         String        // e.g. "30 Toneladas", "15 Toneladas"
+  fuelType         String        @default("Diesel")
+  insuranceNumber  String?
+  insuranceExpiry  DateTime?
+  inspectionExpiry DateTime?
+  currentKm        Float         @default(0)
+  status           String        @default("Disponivel") // Disponivel, Em Viagem, Manutencao, Inativo
+  photo            String?
+  trips            Trip[]
+  maintenances     Maintenance[]
+  fuelLogs         FuelLog[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Driver {
+  id            String    @id @default(uuid())
+  name          String
+  phone         String
+  email         String?   @unique
+  address       String?
+  licenseNumber String    @unique
+  licenseExpiry DateTime
+  photo         String?
+  salary        Float     @default(0)
+  status        String    @default("Activo") // Activo, Em Viagem, Ferias, Inactivo
+  trips         Trip[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Client {
+  id            String    @id @default(uuid())
+  companyName   String
+  contactPerson String
+  phone         String
+  email         String    @unique
+  address       String?
+  city          String    @default("Nampula")
+  province      String    @default("Nampula")
+  country       String    @default("Moçambique")
+  nuit          String?
+  notes         String?
+  bookings      Booking[]
+  invoices      Invoice[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Booking {
+  id               String   @id @default(uuid())
+  clientId         String
+  client           Client   @relation(fields: [clientId], references: [id])
+  serviceId        String?
+  pickupLocation   String
+  destination      String
+  pickupDate       DateTime
+  deliveryDate     DateTime?
+  cargoDescription String
+  weight           String
+  price            Float
+  status           String   @default("Pendente") // Pendente, Aprovada, Em Viagem, Concluida, Cancelada
+  trips            Trip[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Trip {
+  id            String    @id @default(uuid())
+  bookingId     String?
+  booking       Booking?  @relation(fields: [bookingId], references: [id])
+  driverId      String
+  driver        Driver    @relation(fields: [driverId], references: [id])
+  vehicleId     String
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
+  departure     DateTime
+  arrival       DateTime?
+  distance      Float     @default(0) // em km
+  fuelCost      Float     @default(0)
+  otherExpenses Float     @default(0)
+  status        String    @default("Em Curso") // Agendada, Em Curso, Finalizada, Cancelada
+  notes         String?
+  trackingCode  String    @unique // ex: NT-2026-8941
+  invoices      Invoice[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Maintenance {
+  id          String   @id @default(uuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  type        String   // Preventiva, Corretiva
+  description String
+  cost        Float
+  garage      String?  // Oficina
+  status      String   @default("Em Progresso") // Agendada, Em Progresso, Concluida
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FuelLog {
+  id          String   @id @default(uuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  liters      Float
+  costPerLiter Float
+  totalCost   Float
+  gasStation  String   // ex: TotalEnergies, Petrogal, Engen
+  odometer    Float
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+// ----------------------------------------------------
+// FINANCEIRO
+// ----------------------------------------------------
+
+model Invoice {
+  id            String    @id @default(uuid())
+  invoiceNumber String    @unique // ex: FT-2026/001
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id])
+  tripId        String?
+  trip          Trip?     @relation(fields: [tripId], references: [id])
+  amount        Float
+  vat           Float     @default(0.16) // 16% IVA Moçambique
+  totalAmount   Float
+  dueDate       DateTime
+  status        String    @default("Pendente") // Pendente, Paga, Vencida, Cancelada
+  payments      Payment[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  invoiceId     String
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id])
+  amount        Float
+  paymentMethod String   // M-Pesa, E-Mola, Transferencia, Numerario, Cheque
+  reference     String?  // Comprovativo / Id Transação
+  paidAt        DateTime @default(now())
+  createdAt     DateTime @default(now())
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  category    String   // Combustivel, Manutencao, Portagens, Salarios, Alimentacao, Outros
+  description String
+  amount      Float
+  date        DateTime @default(now())
+  receiptUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// WEBSITE CMS & CONTEÚDO
+// ----------------------------------------------------
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String   @default("Transportes N' Tandinho")
+  nuit        String   @default("400123456")
+  phone       String   @default("+258 84 000 0000")
+  email       String   @default("geral@ntandinho.co.mz")
+  address     String   @default("Nampula, Moçambique")
+  city        String   @default("Nampula")
+  country     String   @default("Moçambique")
+  workingHours String  @default("Seg - Sáb: 07:30 - 18:00")
+  logo        String?
+  updatedAt   DateTime @updatedAt
+}
+
+model WebsiteSettings {
+  id            String   @id @default(uuid())
+  siteName      String   @default("Transportes N' Tandinho")
+  primaryColor  String   @default("#0F172A")
+  secondaryColor String  @default("#F97316")
+  metaTitle     String   @default("Transportes N' Tandinho | Transporte e Logística em Moçambique")
+  metaDescription String @default("Aluguer de camiões, transporte de mercadorias, logística nacional e SADC.")
+  facebookUrl   String?
+  linkedinUrl   String?
+  instagramUrl  String?
+  whatsappNumber String? @default("+258840000000")
+  updatedAt     DateTime @updatedAt
+}
+
+model Hero {
+  id          String   @id @default(uuid())
+  title       String   @default("Transporte & Logística de Alta Eficiência em Moçambique")
+  subtitle    String   @default("Aluguer de camiões, transporte de carga pesada e soluções logísticas na região SADC.")
+  buttonText  String   @default("Solicitar Cotação")
+  buttonLink  String   @default("#contacto")
+  imageUrl    String?
+  overlayOpacity Float @default(0.5)
+  updatedAt   DateTime @updatedAt
+}
+
+model About {
+  id          String   @id @default(uuid())
+  title       String   @default("Sobre a Transportes N' Tandinho")
+  description String
+  mission     String?
+  vision      String?
+  values      String?
+  imageUrl    String?
+  updatedAt   DateTime @updatedAt
+}
+
+model ServiceCategory {
+  id        String    @id @default(uuid())
+  name      String
+  services  Service[]
+  createdAt DateTime  @default(now())
+}
+
+model Service {
+  id          String           @id @default(uuid())
+  title       String
+  description String
+  icon        String?
+  imageUrl    String?
+  categoryId  String?
+  category    ServiceCategory? @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model GalleryCategory {
+  id        String    @id @default(uuid())
+  name      String
+  images    GalleryImage[]
+  createdAt DateTime  @default(now())
+}
+
+model Gallery {
+  id          String         @id @default(uuid())
+  title       String
+  description String?
+  images      GalleryImage[]
+  createdAt   DateTime       @default(now())
+}
+
+model GalleryImage {
+  id         String           @id @default(uuid())
+  galleryId  String?
+  gallery    Gallery?         @relation(fields: [galleryId], references: [id])
+  categoryId String?
+  category   GalleryCategory? @relation(fields: [categoryId], references: [id])
+  imageUrl   String
+  caption    String?
+  createdAt  DateTime         @default(now())
+}
+
+model Partner {
+  id        String   @id @default(uuid())
+  name      String
+  logoUrl   String
+  website   String?
+  createdAt DateTime @default(now())
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  client    String
+  company   String?
+  content   String
+  rating    Int      @default(5)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+}
+
+model Blog {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  content   String
+  summary   String?
+  author    String   @default("Equipa N' Tandinho")
+  imageUrl  String?
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  subject   String?
+  message   String
+  status    String   @default("Novo") // Novo, Lido, Respondido
+  createdAt DateTime @default(now())
+}
+
+model SEO {
+  id          String   @id @default(uuid())
+  page        String   @unique // Home, Services, About, Contact
+  title       String
+  description String
+  keywords    String?
+  ogImage     String?
+  updatedAt   DateTime @updatedAt
+}
+
+model Page {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  content   String
+  updatedAt DateTime @updatedAt
+}
+
+model Menu {
+  id        String   @id @default(uuid())
+  label     String
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Statistics {
+  id        String   @id @default(uuid())
+  label     String   // ex: "Km Percorridos", "Cargas Entregues", "Anos de Experiência"
+  value     String   // ex: "+500,000", "99.8%", "12"
+  icon      String?
+  createdAt DateTime @default(now())
+}
+
+// ----------------------------------------------------
+// DOCUMENTOS, AUDITORIA & SISTEMA
+// ----------------------------------------------------
+
+model Document {
+  id        String   @id @default(uuid())
+  title     String
+  fileUrl   String
+  fileType  String
+  category  String   // Frota, Motorista, Fatura, Contrato, Outro
+  createdAt DateTime @default(now())
+}
+
+model File {
+  id        String   @id @default(uuid())
+  filename  String
+  url       String
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info") // info, warning, success, error
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // ex: "Viagem Criada", "Fatura Paga", "Camião Atualizado"
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  entity    String   // Vehicle, Trip, Invoice, User, etc.
+  entityId  String?
+  action    String   // CREATE, UPDATE, DELETE, LOGIN
+  oldValues String?
+  newValues String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  title       String
+  type        String   // Financeiro, Frota, Viagens, Manutencao
+  generatedBy String
+  fileUrl     String?
+  createdAt   DateTime @default(now())
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Gauge, Fuel, Navigation, ShieldCheck, Radio, UserCheck } from 'lucide-react';
-import { LoadItem } from '../../shared/stores/useErpStore';
+import { X, Gauge, Fuel, Navigation, ShieldCheck, Radio } from 'lucide-react';
+import { TripItem } from '../../shared/stores/useErpStore';
 
 interface GpsTrackingModalProps {
-  load: LoadItem;
+  load: TripItem;
   onClose: () => void;
 }
 
@@ -11,7 +11,7 @@ export const GpsTrackingModal: React.FC<GpsTrackingModalProps> = ({ load, onClos
   const [speed, setSpeed] = useState(78);
   const [fuelLevel, setFuelLevel] = useState(84);
   const [engineTemp] = useState(88);
-  const [currentCorridor] = useState('Corredor da Beira / EN6 (KM 142)');
+  const [currentCorridor] = useState('Corredor N1 / EN1 (KM 142)');
 
   // Telemetry simulation tick
   useEffect(() => {
@@ -32,114 +32,70 @@ export const GpsTrackingModal: React.FC<GpsTrackingModalProps> = ({ load, onClos
           <X size={20} />
         </button>
 
-        {/* Modal Header */}
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center">
-            <Radio size={26} className="animate-pulse" />
+          <div className="w-10 h-10 rounded-xl bg-brand-orange/15 border border-brand-orange/30 text-brand-orange flex items-center justify-center">
+            <Radio size={22} className="animate-pulse" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              Telemetria & Rastreio GPS em Tempo Real
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+              Telemetria GPS em Tempo Real — Viagem {load.tripNumber}
             </h2>
-            <p className="text-xs text-slate-400">
-              Sinal Satelital Ativo • Viatura: <strong className="text-white">{load.truck}</strong> • Ordem: <strong className="text-brand-orange">{load.id}</strong>
-            </p>
+            <p className="text-xs text-slate-400">Rastreio por satélite do camião {load.vehiclePlate} ({load.driverName}).</p>
           </div>
         </div>
 
-        {/* Simulated Live Map Display */}
-        <div className="relative w-full h-64 bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden flex flex-col justify-between p-4 mb-6 shadow-inner">
-          {/* Map Grid Pattern background */}
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]" />
-
-          {/* SADC Route Line simulation */}
-          <div className="absolute inset-x-8 top-1/2 h-1 bg-slate-800 -translate-y-1/2">
-            <div className="h-full bg-gradient-to-r from-emerald-500 via-brand-orange to-sky-400 w-3/4 animate-pulse" />
+        {/* Telemetry Dashboard Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-xs text-slate-400 flex items-center gap-1 mb-1 font-semibold">
+              <Gauge size={14} className="text-brand-orange" /> Velocidade
+            </span>
+            <span className="text-2xl font-black font-mono text-white">{speed} km/h</span>
           </div>
 
-          {/* Animated Truck Pin */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-            <div className="p-2.5 rounded-full bg-brand-orange text-slate-950 shadow-glow animate-bounce">
-              <Navigation size={18} className="rotate-45" />
-            </div>
-            <div className="px-2.5 py-0.5 mt-1 rounded bg-slate-900/90 text-white text-[10px] font-mono border border-slate-700 shadow-md">
-              {load.truck} ({speed} km/h)
-            </div>
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-xs text-slate-400 flex items-center gap-1 mb-1 font-semibold">
+              <Fuel size={14} className="text-emerald-400" /> Tanque
+            </span>
+            <span className="text-2xl font-black font-mono text-emerald-400">{Math.round(fuelLevel)}%</span>
           </div>
 
-          {/* Top Bar Map Info */}
-          <div className="relative z-10 flex justify-between items-center text-xs">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-200">
-              <MapPin size={14} className="text-brand-orange" />
-              <span>{currentCorridor}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
-              <ShieldCheck size={14} /> Sinal GPS: 100% Excelente
-            </div>
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-xs text-slate-400 flex items-center gap-1 mb-1 font-semibold">
+              <Navigation size={14} className="text-sky-400" /> Temperatura
+            </span>
+            <span className="text-2xl font-black font-mono text-slate-200">{engineTemp} °C</span>
           </div>
 
-          {/* Bottom Bar Map Info */}
-          <div className="relative z-10 flex justify-between items-center text-xs font-mono">
-            <div className="text-slate-400">
-              Origem: <span className="text-white font-semibold">{load.origin}</span>
-            </div>
-            <div className="text-slate-400">
-              Destino: <span className="text-white font-semibold">{load.destination}</span>
-            </div>
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+            <span className="text-xs text-slate-400 flex items-center gap-1 mb-1 font-semibold">
+              <ShieldCheck size={14} className="text-purple-400" /> Segurança
+            </span>
+            <span className="text-xs font-bold text-emerald-400 mt-2 block">Normal (Sem Alerta)</span>
           </div>
         </div>
 
-        {/* Telemetry Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-blue-500/10 text-blue-400">
-              <Gauge size={20} />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 font-semibold block">Velocidade Atual</span>
-              <span className="text-lg font-mono font-bold text-white">{speed} km/h</span>
-            </div>
+        <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 mb-6 text-xs">
+          <div className="flex justify-between">
+            <span className="text-slate-400">Cliente:</span>
+            <span className="font-bold text-white">{load.customerName}</span>
           </div>
-
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400">
-              <Fuel size={20} />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 font-semibold block">Nível de Tanque</span>
-              <span className="text-lg font-mono font-bold text-emerald-400">{fuelLevel.toFixed(1)}%</span>
-            </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Origem ➔ Destino:</span>
+            <span className="font-semibold text-slate-200">{load.origin} ➔ {load.destination}</span>
           </div>
-
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400">
-              <UserCheck size={20} />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 font-semibold block">Motorista em Serviço</span>
-              <span className="text-xs font-bold text-white truncate block max-w-[110px]">{load.driver}</span>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-400">
-              <Radio size={20} />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 font-semibold block">Temperatura Motor</span>
-              <span className="text-lg font-mono font-bold text-white">{engineTemp} °C</span>
-            </div>
+          <div className="flex justify-between">
+            <span className="text-slate-400">Corredor Actual:</span>
+            <span className="font-bold text-brand-orange">{currentCorridor}</span>
           </div>
         </div>
 
-        {/* Modal Close Action */}
-        <div className="mt-6 flex justify-end">
+        <div className="flex justify-end pt-2 border-t border-slate-800">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl cursor-pointer"
+            className="px-5 py-2 bg-slate-800 text-white font-bold text-xs rounded-xl cursor-pointer"
           >
-            Fechar Rastreamento
+            Fechar Telemetria
           </button>
         </div>
       </div>

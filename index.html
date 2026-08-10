@@ -1,16 +1,357 @@
 <!doctype html>
-<html lang="pt-MZ" class="dark">
+<html lang="pt-MZ" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Painel Administrativo | N' Tandinho Transportes</title>
-    <meta name="description" content="Sistema de Gestão Empresarial e Operacional - N' Tandinho Transportes Moçambique" />
+    <title>N' Tandinho Transportes S.A. | Transporte & Logística em Moçambique e SADC</title>
+    <meta name="description" content="N' Tandinho Transportes S.A. - Empresa de referência em transporte rodoviário de mercadorias, carga geral, contentores e transporte transfronteiriço na região SADC." />
+    <meta name="theme-color" content="#0B132B" />
+
+    <!-- Open Graph / Meta Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ntandinho.zyphtech.com/" />
+    <meta property="og:title" content="N' Tandinho Transportes S.A. | Logística & Carga SADC" />
+    <meta property="og:description" content="Soluções de transporte rodoviário de mercadorias de elevada confiabilidade em Moçambique e SADC." />
+    <meta property="og:image" content="https://ntandinho.zyphtech.com/og-transportes-ntandinho.jpeg" />
+
+    <!-- Fonts Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              navy: {
+                800: '#16223B',
+                850: '#0F172A',
+                900: '#0B132B',
+                950: '#060B18',
+              },
+              brand: {
+                orange: '#F6A823',
+                'orange-hover': '#E09212',
+              }
+            },
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      .bg-grid-pattern {
+        background-image: radial-gradient(rgba(246, 168, 35, 0.12) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+      .glass-card {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .glow-shadow {
+        box-shadow: 0 0 35px rgba(246, 168, 35, 0.2);
+      }
+    </style>
   </head>
-  <body class="bg-[#020817] text-slate-100 font-sans antialiased selection:bg-[#F5A300] selection:text-slate-950">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+
+  <body class="bg-navy-950 text-slate-100 font-sans antialiased selection:bg-brand-orange selection:text-navy-900 overflow-x-hidden min-h-screen flex flex-col">
+
+    <!-- ================= TOPBAR INFORMATIONS ================= -->
+    <div class="bg-navy-900 border-b border-slate-800 text-xs py-2 px-4 text-slate-400">
+      <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center gap-4 flex-wrap">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h32a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5l9 6 9-6"/></svg>
+            contacto@ntandinho.co.mz
+          </span>
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            +258 84 123 4567 / +258 82 123 4567
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-emerald-400 font-semibold flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Operacional Corredores SADC
+          </span>
+          <span class="text-slate-600">|</span>
+          <a href="/admin/login" className="hover:text-brand-orange transition-colors font-bold text-slate-300">
+            Acesso ERP Admin ➔
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= NAVBAR ================= -->
+    <header class="sticky top-0 z-50 bg-navy-950/90 backdrop-blur-xl border-b border-slate-800/80">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-3 group">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-orange to-amber-600 flex items-center justify-center text-navy-950 font-black text-xl shadow-lg shadow-brand-orange/20 group-hover:scale-105 transition-transform">
+            N
+          </div>
+          <div>
+            <span class="text-lg font-black tracking-tight text-white block leading-none">N' TANDINHO</span>
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-brand-orange">Transportes S.A.</span>
+          </div>
+        </a>
+
+        <!-- Desktop Menu -->
+        <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
+          <a href="#inicio" class="hover:text-brand-orange transition-colors">Início</a>
+          <a href="#servicos" class="hover:text-brand-orange transition-colors">Serviços</a>
+          <a href="#frota" class="hover:text-brand-orange transition-colors">Frota</a>
+          <a href="#cotacao" class="hover:text-brand-orange transition-colors">Pedir Cotação</a>
+          <a href="#contacto" class="hover:text-brand-orange transition-colors">Contactos</a>
+        </nav>
+
+        <!-- CTA Action Buttons -->
+        <div class="flex items-center gap-3">
+          <a href="#cotacao" class="hidden sm:inline-flex px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold transition-all">
+            Simular Frete
+          </a>
+          <a href="/admin/login" class="px-5 py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-navy-950 text-xs font-extrabold transition-all shadow-md shadow-brand-orange/20 flex items-center gap-2">
+            <span>Painel ERP</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <!-- ================= HERO SECTION ================= -->
+      <section id="inicio" class="relative py-20 lg:py-28 overflow-hidden bg-grid-pattern">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-brand-orange text-xs font-extrabold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-brand-orange animate-ping"></span>
+                Líder em Logística & Transporte Rodoviário SADC
+              </div>
+
+              <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
+                Transporte Seguro & Rápido de Carga em <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-orange to-amber-400">Moçambique</span>
+              </h1>
+
+              <p class="text-slate-400 text-sm sm:text-base max-w-2xl leading-relaxed mx-auto lg:mx-0">
+                Oferecemos soluções integradas de transporte rodoviário de mercadorias, gestão de frotas, movimentação de contentores e travessia transfronteiriça com monitorização contínua.
+              </p>
+
+              <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                <a href="#cotacao" class="px-6 py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-navy-950 font-black text-sm transition-all glow-shadow flex items-center gap-2">
+                  <span>Solicitar Cotação Rápida</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </a>
+                <a href="/admin/login" class="px-6 py-3.5 rounded-xl bg-navy-900 hover:bg-navy-800 border border-slate-700 text-slate-200 font-bold text-sm transition-all flex items-center gap-2">
+                  <span>Portal do Cliente / ERP</span>
+                  <svg class="w-4 h-4 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </a>
+              </div>
+
+              <!-- Quick Metrics Grid -->
+              <div class="grid grid-cols-3 gap-4 pt-8 border-t border-slate-800 max-w-xl mx-auto lg:mx-0">
+                <div>
+                  <span class="block text-2xl sm:text-3xl font-black text-white font-display">+15</span>
+                  <span class="text-xs text-slate-400 font-medium">Anos no Mercado</span>
+                </div>
+                <div>
+                  <span class="block text-2xl sm:text-3xl font-black text-brand-orange font-display">+50</span>
+                  <span class="text-xs text-slate-400 font-medium">Camiões na Frota</span>
+                </div>
+                <div>
+                  <span class="block text-2xl sm:text-3xl font-black text-white font-display">100%</span>
+                  <span class="text-xs text-slate-400 font-medium">Cobertura SADC</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hero Image Banner Card -->
+            <div class="lg:col-span-5">
+              <div class="relative rounded-3xl overflow-hidden border border-slate-800 shadow-2xl group">
+                <img src="/og-transportes-ntandinho.jpeg" alt="Frota N' Tandinho Transportes" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent"></div>
+                <div class="absolute bottom-6 left-6 right-6 glass-card p-4 rounded-2xl">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-brand-orange/20 text-brand-orange flex items-center justify-center font-bold">
+                      ✓
+                    </div>
+                    <div>
+                      <span class="block text-sm font-bold text-white">Rastreio em Tempo Real</span>
+                      <span class="text-xs text-slate-400">Todos os camiões equipados com sistema telemetria GPS</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SERVIÇOS SECTION ================= -->
+      <section id="servicos" class="py-20 bg-navy-900 border-y border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center max-w-3xl mx-auto space-y-3 mb-16">
+            <span class="text-xs font-black text-brand-orange uppercase tracking-widest">Soluções Logísticas</span>
+            <h2 class="text-2xl sm:text-4xl font-black text-white">Nossos Serviços Especializados</h2>
+            <p class="text-slate-400 text-sm">Oferecemos transporte rodoviário eficiente com rotas cobertas em Maputo, Beira, Nacala, Tete e ligação transfronteiriça SADC.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <div class="glass-card p-6 rounded-2xl hover:border-brand-orange/40 transition-all group">
+              <div class="w-12 h-12 rounded-xl bg-brand-orange/10 text-brand-orange flex items-center justify-center mb-5 font-bold text-xl group-hover:scale-110 transition-transform">
+                🚛
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2">Transporte Carga Geral</h3>
+              <p class="text-xs text-slate-400 leading-relaxed">Movimentação rodoviária segura de mercadorias secas, ensacadas e paletizadas em todo o território nacional.</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl hover:border-brand-orange/40 transition-all group">
+              <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-5 font-bold text-xl group-hover:scale-110 transition-transform">
+                📦
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2">Carga Contentorizada</h3>
+              <p class="text-xs text-slate-400 leading-relaxed">Despacho e transporte de contentores de 20ft e 40ft a partir dos portos de Maputo, Beira e Nacala.</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl hover:border-brand-orange/40 transition-all group">
+              <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-5 font-bold text-xl group-hover:scale-110 transition-transform">
+                🌍
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2">Corredores SADC</h3>
+              <p class="text-xs text-slate-400 leading-relaxed">Rotas internacionais para África do Sul, Zimbábue, Zâmbia, Maláui e Essuatíni com desembaraço alfandegário.</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl hover:border-brand-orange/40 transition-all group">
+              <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-5 font-bold text-xl group-hover:scale-110 transition-transform">
+                ⚙️
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2">Carga Especializada</h3>
+              <p class="text-xs text-slate-400 leading-relaxed">Equipamentos pesados, carga sob medida e assistência dedicada para projetos industriais e mineração.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SIMULADOR DE COTAÇÃO ================= -->
+      <section id="cotacao" class="py-20 bg-navy-950 relative">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="glass-card p-8 sm:p-10 rounded-3xl border border-brand-orange/20 shadow-2xl">
+            
+            <div class="text-center space-y-2 mb-8">
+              <span class="text-xs font-black text-brand-orange uppercase tracking-widest">Pedido de Cotação</span>
+              <h2 class="text-2xl sm:text-3xl font-black text-white">Simule o Frete da Sua Carga</h2>
+              <p class="text-slate-400 text-xs sm:text-sm">Preencha os dados e receba uma proposta comercial detalhada da equipa N' Tandinho.</p>
+            </div>
+
+            <form action="mailto:contacto@ntandinho.co.mz" method="POST" enctype="text/plain" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1">Nome Completo / Empresa</label>
+                  <input type="text" required placeholder="Ex: Logística SADC Lda" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-orange" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1">Telefone / WhatsApp</label>
+                  <input type="tel" required placeholder="+258 84 000 0000" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-orange" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1">Cidade de Origem</label>
+                  <input type="text" required placeholder="Ex: Porto de Maputo" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-orange" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1">Cidade de Destino</label>
+                  <input type="text" required placeholder="Ex: Tete / Blantyre" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-orange" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1">Tipo de Carga</label>
+                  <select class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-orange">
+                    <option>Carga Geral</option>
+                    <option>Contentor 20ft / 40ft</option>
+                    <option>Carga Granel</option>
+                    <option>Equipamento Pesado</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1">Peso Estimado (Toneladas)</label>
+                  <input type="number" placeholder="Ex: 28" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-brand-orange" />
+                </div>
+              </div>
+
+              <button type="submit" class="w-full py-4 rounded-xl bg-brand-orange hover:bg-brand-orange-hover text-navy-950 font-black text-sm tracking-wide uppercase transition-all shadow-lg shadow-brand-orange/20 cursor-pointer mt-4">
+                Enviar Solicitação de Cotação ➔
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer id="contacto" class="bg-navy-900 border-t border-slate-800 text-slate-400 py-12 text-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+        
+        <div class="space-y-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-brand-orange text-navy-950 font-black flex items-center justify-center text-sm">N</div>
+            <span class="font-bold text-white text-base">N' Tandinho Transportes S.A.</span>
+          </div>
+          <p class="text-slate-400 leading-relaxed">Empresa líder em serviços de transporte e logística em Moçambique e no corredor rodoviário SADC.</p>
+          <p class="font-bold text-slate-300">NUIT: 400123456</p>
+        </div>
+
+        <div>
+          <h4 class="text-white font-bold mb-3 text-sm">Nossas Rotas</h4>
+          <ul class="space-y-2">
+            <li>Maputo ➔ Beira ➔ Nampula (N1)</li>
+            <li>Porto da Beira ➔ Machipanda / Harare</li>
+            <li>Maputo ➔ Ressano Garcia / Johannesburg</li>
+            <li>Tete ➔ Zóbuè / Maláui</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-white font-bold mb-3 text-sm">Contactos Rápidos</h4>
+          <ul class="space-y-2">
+            <li>📍 Av. das Indústrias, Parcela 405, Maputo</li>
+            <li>📞 +258 84 123 4567</li>
+            <li>✉️ contacto@ntandinho.co.mz</li>
+            <li>⏰ Seg - Sáb: 07:30 - 18:00</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-white font-bold mb-3 text-sm">Área Reservada</h4>
+          <p class="mb-4 text-slate-400">Acesso exclusivo para gestores, condutores e equipa operacional da N' Tandinho.</p>
+          <a href="/admin/login" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-orange/10 border border-brand-orange/30 text-brand-orange font-extrabold hover:bg-brand-orange hover:text-navy-950 transition-all">
+            <span>Painel ERP Admin (/admin)</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14"/></svg>
+          </a>
+        </div>
+
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 mt-8 border-t border-slate-800/60 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+        <p>© 2026 N' Tandinho Transportes S.A. Todos os direitos reservados.</p>
+        <p class="text-slate-500">Desenvolvido para Máxima Eficiência Logística em Moçambique.</p>
+      </div>
+    </footer>
+
   </body>
 </html>

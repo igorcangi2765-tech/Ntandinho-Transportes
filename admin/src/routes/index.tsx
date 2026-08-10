@@ -22,8 +22,9 @@ const getBasename = () => {
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
     return '/admin';
   }
-  return '';
+  return '/admin';
 };
+
 
 export const AppRouter: React.FC = () => {
   return (

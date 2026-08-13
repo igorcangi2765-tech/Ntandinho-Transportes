@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { exportToCSV } from '../utils/csvExporter';
 import { printGeneralReport } from '../utils/documentPrinter';
+import { formatCurrencyMzn } from '../utils/formatters';
 import {
   Truck,
   Plus,
@@ -292,8 +293,8 @@ export const FleetPage: React.FC = () => {
 
   return (
     <StandardPageLayout
-      title="Gestão de Frota, Camiões & Manutenção"
-      description="Monitorização técnica da frota pesada, registo de serviços técnicos e controlo de vales de combustível."
+      title="Gestão de Frota"
+      description="Controlo de viaturas, registos de manutenção e abastecimentos de combustível."
       icon={Truck}
       actions={
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -375,50 +376,88 @@ export const FleetPage: React.FC = () => {
         </div>
       }
       kpiCards={
-        <>
-          <MetricCard
-            title="Frota Total"
-            value={vehicles.length}
-            subtext="Camiões e semi-reboques"
-            icon={Truck}
-            iconBg="bg-slate-100"
-            iconColor="text-slate-900"
-          />
-          <MetricCard
-            title="Operacionais"
-            value={operationalCount}
-            subtext={`${inTripCount} em viagem activa`}
-            icon={CheckCircle2}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
-          />
-          <MetricCard
-            title="Em Manutenção"
-            value={maintenanceCount}
-            subtext="Bloqueados em oficina"
-            icon={Wrench}
-            iconBg="bg-amber-50"
-            iconColor="text-amber-600"
-          />
-          <MetricCard
-            title="Custo Manutenção"
-            value={`${(totalMaintenanceCostMzn / 1000).toFixed(0)}k`}
-            unit="MZN"
-            subtext="Total em revisões"
-            icon={Clock}
-            iconBg="bg-rose-50"
-            iconColor="text-rose-600"
-          />
-          <MetricCard
-            title="Combustível Emitido"
-            value={`${(totalFuelCostMzn / 1000).toFixed(0)}k`}
-            unit="MZN"
-            subtext="Vales Petromoc / Galp"
-            icon={Fuel}
-            iconBg="bg-purple-50"
-            iconColor="text-purple-600"
-          />
-        </>
+        activeTab === 'vehicles' ? (
+          <>
+            <MetricCard
+              title="Frota Total"
+              value={vehicles.length}
+              subtext="Camiões e semi-reboques"
+              icon={Truck}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Operacionais"
+              value={operationalCount}
+              subtext="Disponíveis para transporte"
+              icon={CheckCircle2}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+            <MetricCard
+              title="Em Viagem"
+              value={inTripCount}
+              subtext="Em trânsito nacional/SADC"
+              icon={Truck}
+              iconBg="bg-sky-50 dark:bg-sky-900/30"
+              iconColor="text-sky-600 dark:text-sky-400"
+            />
+            <MetricCard
+              title="Em Manutenção"
+              value={maintenanceCount}
+              subtext="Bloqueados em oficina"
+              icon={Wrench}
+              iconBg="bg-rose-50 dark:bg-rose-900/30"
+              iconColor="text-rose-600 dark:text-rose-400"
+            />
+          </>
+        ) : activeTab === 'maintenance' ? (
+          <>
+            <MetricCard
+              title="Registos Manutenção"
+              value={maintenanceLogs.length}
+              subtext="Serviços técnicos"
+              icon={Wrench}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Viaturas na Oficina"
+              value={maintenanceCount}
+              subtext="Em reparação/revisão"
+              icon={Wrench}
+              iconBg="bg-amber-50 dark:bg-amber-900/30"
+              iconColor="text-amber-600 dark:text-amber-400"
+            />
+            <MetricCard
+              title="Custo Manutenção"
+              value={formatCurrencyMzn(totalMaintenanceCostMzn)}
+              subtext="Total investido em frota"
+              icon={Clock}
+              iconBg="bg-rose-50 dark:bg-rose-900/30"
+              iconColor="text-rose-600 dark:text-rose-400"
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Registos Abastecimento"
+              value={fuelLogs.length}
+              subtext="Vales emitidos"
+              icon={Fuel}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Custo Combustível"
+              value={formatCurrencyMzn(totalFuelCostMzn)}
+              subtext="Petromoc / Galp / Engen"
+              icon={Fuel}
+              iconBg="bg-purple-50 dark:bg-purple-900/30"
+              iconColor="text-purple-600 dark:text-purple-400"
+            />
+          </>
+        )
       }
     >
       {/* TAB 1: VIATURAS */}

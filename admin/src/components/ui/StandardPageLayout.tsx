@@ -5,7 +5,6 @@ interface StandardPageLayoutProps {
   title: string;
   companyName?: string;
   description: string;
-  badgeText?: string;
   icon?: React.ElementType;
   actions?: React.ReactNode;
   kpiCards?: React.ReactNode;
@@ -16,7 +15,6 @@ export const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
   title,
   companyName,
   description,
-  badgeText,
   icon,
   actions,
   kpiCards,
@@ -29,7 +27,6 @@ export const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
         title={title}
         companyName={companyName}
         description={description}
-        badgeText={badgeText}
         icon={icon}
         actions={actions}
       />

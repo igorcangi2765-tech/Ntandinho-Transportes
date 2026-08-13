@@ -13,7 +13,6 @@ import {
   Building2,
   Plus,
   Users,
-  CreditCard,
   DollarSign,
   Download,
   Printer,
@@ -24,6 +23,7 @@ import {
 } from 'lucide-react';
 import { exportToCSV } from '../utils/csvExporter';
 import { printGeneralReport } from '../utils/documentPrinter';
+import { formatCurrencyMzn } from '../utils/formatters';
 
 export const CRMPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,19 +42,21 @@ export const CRMPage: React.FC = () => {
   } = useErpStore();
   const { addToast } = useNotificationStore();
 
-  const [activeTab, setActiveTab] = useState<'customers' | 'quotations'>('customers');
+  const [activeTab, setActiveTab] = useState<'customers' | 'quotations' | 'services'>('customers');
   const [quotationView, setQuotationView] = useState<'funnel' | 'list'>('list');
 
   const tabParam = searchParams.get('tab');
   useEffect(() => {
     if (tabParam === 'quotations' || tabParam === 'cotacoes') {
       setActiveTab('quotations');
+    } else if (tabParam === 'services' || tabParam === 'servicos') {
+      setActiveTab('services');
     } else {
       setActiveTab('customers');
     }
   }, [tabParam]);
 
-  const handleTabChange = (tab: 'customers' | 'quotations') => {
+  const handleTabChange = (tab: 'customers' | 'quotations' | 'services') => {
     setActiveTab(tab);
     setSearchParams({ tab });
   };
@@ -85,7 +87,6 @@ export const CRMPage: React.FC = () => {
   const totalCorporateCount = customers.filter((c) => c.isCorporate).length;
   const totalParticularCount = customers.filter((c) => !c.isCorporate).length;
   const totalRevenueMzn = customers.reduce((acc, c) => acc + c.totalSpentMzn, 0);
-  const totalCreditLimitMzn = customers.reduce((acc, c) => acc + c.creditLimitMzn, 0);
 
   // Table Columns for Customers
   const customerColumns: Column<CustomerItem>[] = [
@@ -265,8 +266,8 @@ export const CRMPage: React.FC = () => {
 
   return (
     <StandardPageLayout
-      title="Comercial & CRM"
-      description="Gestão de clientes corporativos, limites de crédito e cotações de frete."
+      title="Comercial & Clientes"
+      description="Gestão de clientes corporativos, cotações e catálogo de serviços."
       icon={Building2}
       actions={
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -286,7 +287,7 @@ export const CRMPage: React.FC = () => {
             <span>Imprimir PDF</span>
           </button>
 
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
             <button
               onClick={() => handleTabChange('customers')}
               className={`min-h-[32px] px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center text-center leading-tight sm:w-auto btn-micro ${
@@ -302,6 +303,14 @@ export const CRMPage: React.FC = () => {
               }`}
             >
               Cotações ({quotations.length})
+            </button>
+            <button
+              onClick={() => handleTabChange('services')}
+              className={`min-h-[32px] px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center text-center leading-tight sm:w-auto btn-micro ${
+                activeTab === 'services' ? 'bg-slate-900 dark:bg-brand-orange text-white dark:text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Serviços
             </button>
           </div>
 
@@ -327,50 +336,96 @@ export const CRMPage: React.FC = () => {
         </div>
       }
       kpiCards={
-        <>
-          <MetricCard
-            title="Total Clientes"
-            value={customers.length}
-            subtext="Clientes no cadastro ERP"
-            icon={Users}
-            iconBg="bg-slate-100"
-            iconColor="text-slate-900"
-          />
-          <MetricCard
-            title="Empresas S.A."
-            value={totalCorporateCount}
-            subtext="Contratos corporativos"
-            icon={Building2}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-600"
-          />
-          <MetricCard
-            title="Particulares"
-            value={totalParticularCount}
-            subtext="Clientes individuais"
-            icon={Users}
-            iconBg="bg-amber-50"
-            iconColor="text-amber-600"
-          />
-          <MetricCard
-            title="Total Faturado CRM"
-            value={`${(totalRevenueMzn / 1000000).toFixed(2)}M`}
-            unit="MZN"
-            subtext="Volume global de fretes"
-            icon={DollarSign}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
-          />
-          <MetricCard
-            title="Crédito Concedido"
-            value={`${(totalCreditLimitMzn / 1000000).toFixed(2)}M`}
-            unit="MZN"
-            subtext="Teto de crédito aprovado"
-            icon={CreditCard}
-            iconBg="bg-purple-50"
-            iconColor="text-purple-600"
-          />
-        </>
+        activeTab === 'customers' ? (
+          <>
+            <MetricCard
+              title="Total Clientes"
+              value={customers.length}
+              subtext="Clientes no cadastro ERP"
+              icon={Users}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Empresas S.A."
+              value={totalCorporateCount}
+              subtext="Contratos corporativos"
+              icon={Building2}
+              iconBg="bg-blue-50 dark:bg-blue-900/30"
+              iconColor="text-blue-600 dark:text-blue-400"
+            />
+            <MetricCard
+              title="Particulares"
+              value={totalParticularCount}
+              subtext="Clientes individuais"
+              icon={Users}
+              iconBg="bg-amber-50 dark:bg-amber-900/30"
+              iconColor="text-amber-600 dark:text-amber-400"
+            />
+            <MetricCard
+              title="Faturação Comercial"
+              value={formatCurrencyMzn(totalRevenueMzn)}
+              subtext="Volume global de fretes"
+              icon={DollarSign}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+          </>
+        ) : activeTab === 'quotations' ? (
+          <>
+            <MetricCard
+              title="Total Cotações"
+              value={quotations.length}
+              subtext="Orçamentos emitidos"
+              icon={FileSpreadsheet}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Cotações Aceites"
+              value={quotations.filter((q) => q.status === 'ACEITE').length}
+              subtext="Aprovadas pelos clientes"
+              icon={Building2}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+            <MetricCard
+              title="Em Análise"
+              value={quotations.filter((q) => q.status === 'EM_ANALISE' || q.status === 'ENVIADA').length}
+              subtext="Aguardam resposta"
+              icon={Users}
+              iconBg="bg-amber-50 dark:bg-amber-900/30"
+              iconColor="text-amber-600 dark:text-amber-400"
+            />
+            <MetricCard
+              title="Valor em Propostas"
+              value={formatCurrencyMzn(quotations.reduce((acc, q) => acc + q.totalPrice, 0))}
+              subtext="Volume total orçado"
+              icon={DollarSign}
+              iconBg="bg-purple-50 dark:bg-purple-900/30"
+              iconColor="text-purple-600 dark:text-purple-400"
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Serviços Oficiais"
+              value="5 Especialidades"
+              subtext="Catálogo de transporte N'Tandinho"
+              icon={Building2}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Carga Pesada & SADC"
+              value="Frota Dedicada"
+              subtext="Contentores e carga seca"
+              icon={DollarSign}
+              iconBg="bg-amber-50 dark:bg-amber-900/30"
+              iconColor="text-amber-600 dark:text-amber-400"
+            />
+          </>
+        )
       }
     >
       {activeTab === 'customers' ? (
@@ -402,7 +457,7 @@ export const CRMPage: React.FC = () => {
             },
           ]}
         />
-      ) : (
+      ) : activeTab === 'quotations' ? (
         <div className="space-y-4">
           <div className="flex justify-end gap-2">
             <div className="flex items-center bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -456,6 +511,61 @@ export const CRMPage: React.FC = () => {
               onQuotationClick={(row: QuotationItem) => setSelectedQuotationDrawer(row)}
             />
           )}
+        </div>
+      ) : (
+        /* TAB 3: SERVIÇOS OFICIAIS DO WEBSITE */
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center gap-2">
+                <Building2 size={18} className="text-[#F6A823]" />
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">1. Transporte de Carga Pesada & Contentores</h4>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Transporte especializado de carga seca, contentores de 20ft e 40ft, mercadorias paletizadas e materiais industriais em todo o território nacional e corredores SADC.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center gap-2">
+                <Building2 size={18} className="text-[#F6A823]" />
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">2. Aluguer de Camiões & Frota Dedicada</h4>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Aluguer de frota pesada (Volvo, Scania, Mercedes-Benz) sob medida para contratos de média e longa duração, com motoristas credenciados e assistência 24h.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center gap-2">
+                <Building2 size={18} className="text-[#F6A823]" />
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">3. Logística Nacional (Moçambique)</h4>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Conexão diária entre Nampula, Porto de Nacala, Beira, Maputo, Pemba e Lichinga com gestão integrada de rotas e rastreio completo.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center gap-2">
+                <Building2 size={18} className="text-[#F6A823]" />
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">4. Transporte Internacional SADC</h4>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Operações transfronteiriças autorizadas com vistos SADC para o Malawi (Blantyre/Lilongwe), Zâmbia (Lusaka) e Zimbabué (Harare).
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 md:col-span-2">
+              <div className="flex items-center gap-2">
+                <Building2 size={18} className="text-[#F6A823]" />
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">5. Mobilidade Executiva & Transporte VIP</h4>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Serviço de transporte executivo para equipas corporativas, delegações e suporte em terrenos de operação com viaturas 4x4.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

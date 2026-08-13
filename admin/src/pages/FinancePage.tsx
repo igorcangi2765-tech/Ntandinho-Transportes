@@ -7,6 +7,7 @@ import { DataTable, Column } from '../components/ui/DataTable';
 import { Modal } from '../components/ui/Modal';
 import { exportToCSV } from '../utils/csvExporter';
 import { printInvoice, printPaymentReceipt, printGeneralReport } from '../utils/documentPrinter';
+import { formatCurrencyMzn } from '../utils/formatters';
 import {
   Receipt,
   Plus,
@@ -256,8 +257,8 @@ export const FinancePage: React.FC = () => {
 
   return (
     <StandardPageLayout
-      title="Gestão Financeira, Faturação (IVA 16%) & Caixa"
-      description="Emissão de faturas, registo de recebimentos bancários/M-Pesa e controlo de despesas operacionais."
+      title="Financeiro & Caixa"
+      description="Gestão de faturas, recebimentos, despesas e resumo de caixa."
       icon={Receipt}
       actions={
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -284,7 +285,7 @@ export const FinancePage: React.FC = () => {
                 activeTab === 'caixa' ? 'bg-slate-900 dark:bg-brand-orange text-white dark:text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Visão Geral
+              Resumo
             </button>
             <button
               onClick={() => handleTabChange('faturacao')}
@@ -292,7 +293,7 @@ export const FinancePage: React.FC = () => {
                 activeTab === 'faturacao' ? 'bg-slate-900 dark:bg-brand-orange text-white dark:text-slate-950 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Faturas (IVA 16%)
+              Faturas
             </button>
             <button
               onClick={() => handleTabChange('despesas')}
@@ -347,44 +348,115 @@ export const FinancePage: React.FC = () => {
         </div>
       }
       kpiCards={
-        <>
-          <MetricCard
-            title="Total Faturado"
-            value={`${(totalInvoicedMzn / 1000000).toFixed(2)}M`}
-            unit="MZN"
-            subtext="Faturas emitidas IVA 16%"
-            icon={Receipt}
-            iconBg="bg-slate-100"
-            iconColor="text-slate-900"
-          />
-          <MetricCard
-            title="Total Recebido"
-            value={`${(totalPaidMzn / 1000000).toFixed(2)}M`}
-            unit="MZN"
-            subtext="Entradas liquidadas"
-            icon={TrendingUp}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
-          />
-          <MetricCard
-            title="Despesas Operacionais"
-            value={`${(totalExpensesMzn / 1000).toFixed(0)}k`}
-            unit="MZN"
-            subtext="Combustível & Oficina"
-            icon={TrendingDown}
-            iconBg="bg-rose-50"
-            iconColor="text-rose-600"
-          />
-          <MetricCard
-            title="Saldo Líquido Caixa"
-            value={`${(cashBalanceMzn / 1000000).toFixed(2)}M`}
-            unit="MZN"
-            subtext="Balanço Tesouraria S.A."
-            icon={DollarSign}
-            iconBg="bg-amber-50"
-            iconColor="text-brand-orange"
-          />
-        </>
+        activeTab === 'caixa' ? (
+          <>
+            <MetricCard
+              title="Total Faturado"
+              value={formatCurrencyMzn(totalInvoicedMzn)}
+              subtext="Faturas emitidas IVA 16%"
+              icon={Receipt}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Total Recebido"
+              value={formatCurrencyMzn(totalPaidMzn)}
+              subtext="Entradas liquidadas"
+              icon={TrendingUp}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+            <MetricCard
+              title="Despesas Operacionais"
+              value={formatCurrencyMzn(totalExpensesMzn)}
+              subtext="Combustível & Manutenção"
+              icon={TrendingDown}
+              iconBg="bg-rose-50 dark:bg-rose-900/30"
+              iconColor="text-rose-600 dark:text-rose-400"
+            />
+            <MetricCard
+              title="Saldo Líquido Caixa"
+              value={formatCurrencyMzn(cashBalanceMzn)}
+              subtext="Balanço Tesouraria S.A."
+              icon={DollarSign}
+              iconBg="bg-amber-50 dark:bg-amber-900/30"
+              iconColor="text-[#F6A823]"
+            />
+          </>
+        ) : activeTab === 'faturacao' ? (
+          <>
+            <MetricCard
+              title="Faturas Emitidas"
+              value={invoices.length}
+              subtext="Documentos de faturação"
+              icon={Receipt}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Total Faturado"
+              value={formatCurrencyMzn(totalInvoicedMzn)}
+              subtext="Valor global emitido"
+              icon={DollarSign}
+              iconBg="bg-[#F6A823]/10 dark:bg-[#F6A823]/20"
+              iconColor="text-[#F6A823]"
+            />
+            <MetricCard
+              title="Valor Liquidado"
+              value={formatCurrencyMzn(totalPaidMzn)}
+              subtext="Pagamentos recebidos"
+              icon={TrendingUp}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+            <MetricCard
+              title="Pendente a Receber"
+              value={formatCurrencyMzn(totalInvoicedMzn - totalPaidMzn)}
+              subtext="Saldo a receber de clientes"
+              icon={TrendingDown}
+              iconBg="bg-rose-50 dark:bg-rose-900/30"
+              iconColor="text-rose-600 dark:text-rose-400"
+            />
+          </>
+        ) : activeTab === 'despesas' ? (
+          <>
+            <MetricCard
+              title="Lançamentos Despesa"
+              value={expenses.length}
+              subtext="Registos efetuados"
+              icon={TrendingDown}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Total Despesas"
+              value={formatCurrencyMzn(totalExpensesMzn)}
+              subtext="Combustível e frota"
+              icon={TrendingDown}
+              iconBg="bg-rose-50 dark:bg-rose-900/30"
+              iconColor="text-rose-600 dark:text-rose-400"
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Total Recebimentos"
+              value={payments.length}
+              subtext="Recibos liquidados"
+              icon={TrendingUp}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Valor Recebido"
+              value={formatCurrencyMzn(totalPaidMzn)}
+              subtext="Entradas no banco/M-Pesa"
+              icon={TrendingUp}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+          </>
+        )
       }
     >
       {/* TAB 1: FATURAÇÃO */}

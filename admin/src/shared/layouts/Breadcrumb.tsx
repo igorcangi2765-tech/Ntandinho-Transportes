@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 
 const routeLabels: Record<string, string> = {
-  crm: 'CRM & Cotações',
+  crm: 'Comercial',
   fleet: 'Gestão de Frota',
   loads: 'Logística & Cargas',
   finance: 'Financeiro',

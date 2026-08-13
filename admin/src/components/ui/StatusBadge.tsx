@@ -34,7 +34,7 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, size = 'sm' }) => {
-  const displayLabel = label || status.replace('_', ' ');
+  const displayLabel = label || String(status).replace(/_/g, ' ');
 
   const getStyle = (st: string) => {
     switch (st) {
@@ -82,7 +82,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, size = 
 
   return (
     <span
-      className={`inline-flex items-center font-extrabold rounded-full border transition-colors ${getStyle(
+      className={`inline-flex items-center font-extrabold rounded-full border transition-colors whitespace-nowrap shrink-0 ${getStyle(
         status
       )} ${sizeClasses}`}
     >

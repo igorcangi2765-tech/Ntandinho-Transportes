@@ -84,7 +84,7 @@ export const QuickActionModal: React.FC<QuickActionModalProps> = ({ isOpen, onCl
         isCorporate: true,
         creditLimitMzn: 5000000,
       });
-      addToast('Cliente Cadastrado', `Cliente ${customerName} adicionado ao CRM!`, 'success');
+      addToast('Cliente Cadastrado', `Cliente ${customerName} adicionado ao cadastro ERP!`, 'success');
     } else if (activeForm === 'viatura') {
       addVehicle({
         plateNumber: plate.toUpperCase(),

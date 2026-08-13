@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -12,10 +12,8 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   LogOut,
   X,
-  User,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAppStore } from '../../stores/useAppStore';
@@ -47,63 +45,35 @@ export const navItems: NavItem[] = [
   {
     id: 'operacoes',
     title: 'Operações',
-    path: '/operations?tab=trips',
+    path: '/operations',
     icon: Briefcase,
-    badge: '3',
-    subItems: [
-      { title: 'Viagens', path: '/operations?tab=trips' },
-      { title: 'Reservas', path: '/operations?tab=bookings' },
-      { title: 'Agenda Operacional', path: '/operations?tab=calendar' },
-    ],
   },
   {
     id: 'frota',
     title: 'Frota',
-    path: '/fleet?tab=vehicles',
+    path: '/fleet',
     icon: Truck,
-    badge: '14',
-    subItems: [
-      { title: 'Viaturas', path: '/fleet?tab=vehicles' },
-      { title: 'Manutenção', path: '/fleet?tab=maintenance' },
-      { title: 'Abastecimento', path: '/fleet?tab=fuel' },
-    ],
   },
   {
-    id: 'pessoas',
-    title: 'Pessoas & Equipa',
-    path: '/drivers-team?tab=drivers',
+    id: 'equipa',
+    title: 'Equipa',
+    path: '/drivers-team',
     icon: Users,
-    badge: '2',
-    subItems: [
-      { title: 'Motoristas', path: '/drivers-team?tab=drivers' },
-      { title: 'Equipa Interna', path: '/drivers-team?tab=team' },
-    ],
   },
   {
     id: 'comercial',
-    title: 'Comercial & CRM',
-    path: '/crm?tab=customers',
+    title: 'Comercial',
+    path: '/crm',
     icon: TrendingUp,
-    badge: '1',
-    subItems: [
-      { title: 'Clientes / CRM', path: '/crm?tab=customers' },
-      { title: 'Cotações & Propostas', path: '/crm?tab=quotations' },
-      { title: 'Serviços & Rotas', path: '/services-routes?tab=services' },
-    ],
   },
   {
     id: 'financeiro',
     title: 'Financeiro',
-    path: '/finance?tab=overview',
+    path: '/finance',
     icon: DollarSign,
-    subItems: [
-      { title: 'Visão Geral', path: '/finance?tab=overview' },
-      { title: 'Faturas', path: '/finance?tab=invoices' },
-      { title: 'Receitas & Despesas', path: '/finance?tab=expenses' },
-    ],
   },
   {
-    id: 'analise',
+    id: 'relatorios',
     title: 'Relatórios',
     path: '/reports',
     icon: BarChart3,
@@ -115,17 +85,10 @@ export const navItems: NavItem[] = [
     icon: FileText,
   },
   {
-    id: 'administracao',
+    id: 'configuracoes',
     title: 'Configurações',
-    path: '/settings?tab=company',
+    path: '/settings',
     icon: ShieldCheck,
-    badge: '4',
-    badgeType: 'warning',
-    subItems: [
-      { title: 'Perfil da Empresa', path: '/settings?tab=company' },
-      { title: 'Utilizadores', path: '/settings?tab=users' },
-      { title: 'Registo de Actividades', path: '/audit-logs' },
-    ],
   },
 ];
 
@@ -191,48 +154,6 @@ export const Sidebar: React.FC = () => {
   const { logout } = useAuthStore();
   const { addToast } = useNotificationStore();
 
-  const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
-    operacoes: true,
-    frota: false,
-    pessoas: false,
-    comercial: false,
-    financeiro: false,
-    administracao: false,
-  });
-
-  // Auto-expand active parent submenu when route changes
-  useEffect(() => {
-    navItems.forEach((item) => {
-      if (item.subItems && item.subItems.length > 0) {
-        const isChildActive = item.subItems.some((sub) =>
-          isRouteActive(sub.path, location.pathname, location.search)
-        );
-        const isParentBaseActive = isRouteActive(item.path, location.pathname, location.search);
-        if (isChildActive || isParentBaseActive) {
-          setOpenSubmenus((prev) => ({ ...prev, [item.id]: true }));
-        }
-      }
-    });
-  }, [location.pathname, location.search]);
-
-  const handleParentClick = (item: NavItem, e: React.MouseEvent, isMobileDrawer: boolean) => {
-    e.stopPropagation();
-    
-    // Toggle accordion state for the clicked parent
-    setOpenSubmenus((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
-
-    // Target the primary default subitem or base path
-    const targetPath = item.subItems && item.subItems.length > 0 ? item.subItems[0].path : item.path;
-    navigate(targetPath);
-
-    if (isMobileDrawer) setMobileSidebarOpen(false);
-  };
-
-  const toggleSubmenuChevron = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setOpenSubmenus((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
   const handleLogout = (e: React.MouseEvent) => {
     e.stopPropagation();
     logout();
@@ -280,16 +201,11 @@ export const Sidebar: React.FC = () => {
 
               {!isCollapsed && (
                 <div className="flex flex-col truncate">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white font-display truncate">
-                      N' Tandinho
-                    </span>
-                    <span className="bg-[#F6A823]/15 text-[#F6A823] text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border border-[#F6A823]/30">
-                      ERP
-                    </span>
-                  </div>
-                  <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500 dark:text-slate-400 truncate">
-                    Transportes S.A.
+                  <span className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white font-display truncate">
+                    N' Tandinho
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#F6A823]">
+                    ERP
                   </span>
                 </div>
               )}
@@ -326,242 +242,73 @@ export const Sidebar: React.FC = () => {
             </button>
           </div>
 
-          {/* USER PROFILE SUMMARY CARD */}
-          {!isCollapsed && (
-            <div className="mx-3 mt-3 p-2.5 rounded-xl bg-slate-50 dark:bg-[#111D33] border border-slate-200/70 dark:border-[#16223B] flex items-center space-x-3">
-              <div className="relative shrink-0">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-[#F6A823] border border-[#F6A823]/30 flex items-center justify-center font-extrabold text-xs">
-                  <User size={16} className="text-[#F6A823]" />
-                </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#0B132B] rounded-full" />
-              </div>
-              <div className="flex flex-col truncate">
-                <span className="text-xs font-extrabold text-slate-900 dark:text-white truncate leading-tight">
-                  Sérgio N'tandinho
-                </span>
-                <span className="text-[10px] font-semibold text-[#F6A823] truncate">
-                  Administrador
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* NAVIGATION MENU ITEMS */}
           <nav
             className={cn(
-              'space-y-1 mt-1 max-h-[calc(100vh-210px)] overflow-y-auto custom-scrollbar',
+              'space-y-1 mt-3 max-h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar',
               isCollapsed ? 'px-2 py-3' : 'p-3'
             )}
           >
             {navItems.map((item) => {
               const Icon = item.icon;
-              const hasSubItems = item.subItems && item.subItems.length > 0;
-
-              // Determine active state for parent
               const isMainActive = isRouteActive(item.path, location.pathname, location.search);
-              const isAnySubActive =
-                hasSubItems &&
-                item.subItems!.some((sub) =>
-                  isRouteActive(sub.path, location.pathname, location.search)
-                );
-              const isParentActive = isMainActive || isAnySubActive;
-
-              const isSubOpen = !!openSubmenus[item.id];
 
               return (
                 <div key={item.id} className="space-y-1 relative group">
-                  {hasSubItems ? (
-                    <div
-                      title={isCollapsed ? item.title : undefined}
-                      className={cn(
-                        'w-full group relative flex items-center rounded-xl font-extrabold text-xs transition-all duration-200 cursor-pointer active:scale-[0.98] touch-manipulation',
+                  <NavLink
+                    to={item.path}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isMobileDrawer) setMobileSidebarOpen(false);
+                    }}
+                    title={isCollapsed ? item.title : undefined}
+                    className={({ isActive }) =>
+                      cn(
+                        'group relative flex items-center rounded-xl font-extrabold text-xs transition-all duration-200 cursor-pointer active:scale-[0.98] touch-manipulation',
                         isCollapsed
                           ? 'h-10 w-10 mx-auto justify-center p-0'
                           : 'justify-between px-3 py-2.5',
-                        isParentActive
+                        isActive || isMainActive
                           ? 'bg-slate-100 dark:bg-[#111D33] text-slate-900 dark:text-white border border-slate-200 dark:border-[#273759] shadow-subtle font-black ' +
                               (isCollapsed
                                 ? 'before:absolute before:-left-2 before:top-2 before:bottom-2 before:w-1 before:bg-[#F6A823] before:rounded-r-full'
                                 : 'before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-[#F6A823] before:rounded-r-full')
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#111D33]'
-                      )}
-                      onClick={(e) => handleParentClick(item, e, isMobileDrawer)}
-                    >
-                      <div className="flex items-center justify-center">
-                        <Icon
-                          className={cn(
-                            'w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3',
-                            isParentActive
-                              ? 'text-[#F6A823]'
-                              : 'text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
-                          )}
-                        />
-                        {!isCollapsed && <span className="ml-3 truncate">{item.title}</span>}
-                      </div>
+                      )
+                    }
+                  >
+                    <div className="flex items-center justify-center">
+                      <Icon
+                        className={cn(
+                          'w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3',
+                          isMainActive
+                            ? 'text-[#F6A823]'
+                            : 'text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
+                        )}
+                      />
+                      {!isCollapsed && <span className="ml-3 truncate">{item.title}</span>}
+                    </div>
 
-                      {/* Badges and Submenu Chevron */}
-                      {!isCollapsed ? (
-                        <div className="flex items-center gap-1.5 ml-auto shrink-0">
-                          {item.badge && (
-                            <span
-                              className={cn(
-                                'text-[10px] font-extrabold px-1.5 py-0.5 rounded-md border',
-                                item.badgeType === 'warning'
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                                  : 'bg-slate-200/60 dark:bg-[#16223B] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-[#273759]'
-                              )}
-                            >
-                              {item.badge}
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={(e) => toggleSubmenuChevron(item.id, e)}
-                            className="p-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
-                            title={isSubOpen ? 'Recolher Submenu' : 'Expandir Submenu'}
+                    {!isCollapsed
+                      ? item.badge && (
+                          <span
+                            className={cn(
+                              'text-[10px] font-extrabold px-1.5 py-0.5 rounded-md border ml-auto',
+                              item.badgeType === 'warning'
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                : 'bg-slate-200/60 dark:bg-[#16223B] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-[#273759]'
+                            )}
                           >
-                            <ChevronDown
-                              size={14}
-                              className={cn(
-                                'transition-transform duration-200 text-slate-400',
-                                isSubOpen && 'rotate-180'
-                              )}
-                            />
-                          </button>
-                        </div>
-                      ) : (
-                        /* Collapsed Badge Dot */
-                        item.badge && (
+                            {item.badge}
+                          </span>
+                        )
+                      : item.badge && (
                           <span className="absolute top-1 right-1 flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F6A823]"></span>
                           </span>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <NavLink
-                      to={item.path}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (isMobileDrawer) setMobileSidebarOpen(false);
-                      }}
-                      title={isCollapsed ? item.title : undefined}
-                      className={({ isActive }) =>
-                        cn(
-                          'group relative flex items-center rounded-xl font-extrabold text-xs transition-all duration-200 cursor-pointer active:scale-[0.98] touch-manipulation',
-                          isCollapsed
-                            ? 'h-10 w-10 mx-auto justify-center p-0'
-                            : 'justify-between px-3 py-2.5',
-                          isActive || isMainActive
-                            ? 'bg-slate-100 dark:bg-[#111D33] text-slate-900 dark:text-white border border-slate-200 dark:border-[#273759] shadow-subtle font-black ' +
-                                (isCollapsed
-                                  ? 'before:absolute before:-left-2 before:top-2 before:bottom-2 before:w-1 before:bg-[#F6A823] before:rounded-r-full'
-                                  : 'before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-[#F6A823] before:rounded-r-full')
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#111D33]'
-                        )
-                      }
-                    >
-                      <div className="flex items-center justify-center">
-                        <Icon
-                          className={cn(
-                            'w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3',
-                            isMainActive
-                              ? 'text-[#F6A823]'
-                              : 'text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
-                          )}
-                        />
-                        {!isCollapsed && <span className="ml-3 truncate">{item.title}</span>}
-                      </div>
-
-                      {!isCollapsed
-                        ? item.badge && (
-                            <span
-                              className={cn(
-                                'text-[10px] font-extrabold px-1.5 py-0.5 rounded-md border ml-auto',
-                                item.badgeType === 'warning'
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                                  : 'bg-slate-200/60 dark:bg-[#16223B] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-[#273759]'
-                              )}
-                            >
-                              {item.badge}
-                            </span>
-                          )
-                        : item.badge && (
-                            <span className="absolute top-1 right-1 flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F6A823]"></span>
-                            </span>
-                          )}
-                    </NavLink>
-                  )}
-
-                  {/* Expanded Submenu Children Dropdown */}
-                  {!isCollapsed && hasSubItems && isSubOpen && (
-                    <div className="pl-9 pr-2 py-1 space-y-1 animate-in fade-in slide-in-from-top-1 duration-150">
-                      {item.subItems!.map((sub) => {
-                        const isSubActive = isRouteActive(
-                          sub.path,
-                          location.pathname,
-                          location.search
-                        );
-
-                        return (
-                          <NavLink
-                            key={sub.title}
-                            to={sub.path}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isMobileDrawer) setMobileSidebarOpen(false);
-                            }}
-                            className={cn(
-                              'block px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150 active:scale-[0.98] touch-manipulation',
-                              isSubActive
-                                ? 'text-[#F6A823] font-extrabold bg-[#F6A823]/10'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#111D33]'
-                            )}
-                          >
-                            {sub.title}
-                          </NavLink>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Collapsed Hover Popover for Subitems */}
-                  {isCollapsed && hasSubItems && (
-                    <div className="absolute left-full top-0 ml-3 hidden group-hover:flex flex-col bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-[#273759] rounded-xl shadow-xl py-2 px-1.5 min-w-[180px] z-50 animate-in fade-in slide-in-from-left-2 duration-150 pointer-events-auto">
-                      <div className="px-3 py-1 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/80 mb-1">
-                        {item.title}
-                      </div>
-                      {item.subItems!.map((sub) => {
-                        const isSubActive = isRouteActive(
-                          sub.path,
-                          location.pathname,
-                          location.search
-                        );
-
-                        return (
-                          <NavLink
-                            key={sub.title}
-                            to={sub.path}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isMobileDrawer) setMobileSidebarOpen(false);
-                            }}
-                            className={cn(
-                              'px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap',
-                              isSubActive
-                                ? 'text-[#F6A823] bg-[#F6A823]/10 font-bold'
-                                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#111D33]'
-                            )}
-                          >
-                            {sub.title}
-                          </NavLink>
-                        );
-                      })}
-                    </div>
-                  )}
+                        )}
+                  </NavLink>
                 </div>
               );
             })}

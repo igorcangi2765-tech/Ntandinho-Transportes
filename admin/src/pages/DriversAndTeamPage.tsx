@@ -14,7 +14,6 @@ import {
   Users,
   Plus,
   Award,
-  CheckCircle2,
   ShieldCheck,
   UserCheck,
   Printer,
@@ -192,8 +191,8 @@ export const DriversAndTeamPage: React.FC = () => {
 
   return (
     <StandardPageLayout
-      title="Gestão de Pessoas, Motoristas & Equipa RH"
-      description="Credenciação de condutores pesados, visto SADC para trânsito regional e equipa interna da N' Tandinho."
+      title="Gestão de Equipa"
+      description="Controlo de motoristas, documentação e colaboradores internos."
       icon={Users}
       actions={
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -257,40 +256,61 @@ export const DriversAndTeamPage: React.FC = () => {
         </div>
       }
       kpiCards={
-        <>
-          <MetricCard
-            title="Total Motoristas"
-            value={drivers.length}
-            subtext="Condutores pesados"
-            icon={Users}
-            iconBg="bg-slate-100"
-            iconColor="text-slate-900"
-          />
-          <MetricCard
-            title="Disponíveis"
-            value={availableDriversCount}
-            subtext="Prontos p/ despacho"
-            icon={CheckCircle2}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
-          />
-          <MetricCard
-            title="Visto SADC Válido"
-            value={validSadcCount}
-            subtext="Trânsito regional"
-            icon={ShieldCheck}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-600"
-          />
-          <MetricCard
-            title="Quadro de Pessoal"
-            value={employees.length}
-            subtext="Funcionários N'Tandinho"
-            icon={UserCheck}
-            iconBg="bg-purple-50"
-            iconColor="text-purple-600"
-          />
-        </>
+        activeTab === 'motoristas' ? (
+          <>
+            <MetricCard
+              title="Total Motoristas"
+              value={drivers.length}
+              subtext="Condutores pesados credenciados"
+              icon={Users}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Disponíveis"
+              value={availableDriversCount}
+              subtext="Prontos p/ despacho"
+              icon={UserCheck}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+            <MetricCard
+              title="Visto SADC Válido"
+              value={validSadcCount}
+              subtext="Trânsito regional autorizado"
+              icon={ShieldCheck}
+              iconBg="bg-blue-50 dark:bg-blue-900/30"
+              iconColor="text-blue-600 dark:text-blue-400"
+            />
+            <MetricCard
+              title="Pontuação Média"
+              value="4.9 / 5.0"
+              subtext="Avaliação operacional"
+              icon={Award}
+              iconBg="bg-amber-50 dark:bg-amber-900/30"
+              iconColor="text-amber-600 dark:text-amber-400"
+            />
+          </>
+        ) : (
+          <>
+            <MetricCard
+              title="Quadro de Pessoal"
+              value={employees.length}
+              subtext="Colaboradores internos"
+              icon={UserCheck}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Delegações Activas"
+              value="3 Sedes"
+              subtext="Matola, Beira e Nacala"
+              icon={ShieldCheck}
+              iconBg="bg-purple-50 dark:bg-purple-900/30"
+              iconColor="text-purple-600 dark:text-purple-400"
+            />
+          </>
+        )
       }
     >
       {activeTab === 'motoristas' ? (

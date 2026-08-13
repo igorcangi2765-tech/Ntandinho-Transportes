@@ -4,7 +4,7 @@ import { ChevronRight, Home } from 'lucide-react';
 
 const routeLabels: Record<string, string> = {
   admin: 'N\' Tandinho ERP',
-  crm: 'CRM & Cotações',
+  crm: 'Comercial',
   fleet: 'Gestão de Frota',
   loads: 'Logística & Cargas',
   finance: 'Financeiro',

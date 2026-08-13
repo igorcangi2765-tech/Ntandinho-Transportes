@@ -22,7 +22,7 @@ const getBasename = () => {
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
     return '/admin';
   }
-  return '/admin';
+  return '';
 };
 
 

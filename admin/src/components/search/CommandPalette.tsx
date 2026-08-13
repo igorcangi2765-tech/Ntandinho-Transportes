@@ -54,7 +54,7 @@ export const CommandPalette: React.FC = () => {
 
   const quickNavItems = [
     { title: 'Painel Geral (Dashboard)', path: '/admin', icon: LayoutDashboard },
-    { title: 'CRM & Cotações', path: '/admin/crm', icon: Users },
+    { title: 'Comercial & Cotações', path: '/admin/crm', icon: Users },
     { title: 'Gestão de Frota', path: '/admin/fleet', icon: Truck },
     { title: 'Operações & Despacho', path: '/operations', icon: Package },
     { title: 'Financeiro', path: '/admin/finance', icon: DollarSign },

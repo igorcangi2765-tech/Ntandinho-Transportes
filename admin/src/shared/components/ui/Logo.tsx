@@ -40,8 +40,8 @@ export const Logo: React.FC<LogoProps> = ({
             N' Tandinho
           </span>
           {showSubtitle && (
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-              Transportes S.A.
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#F6A823] truncate">
+              ERP
             </span>
           )}
         </div>

@@ -3,9 +3,7 @@ import {
   Search,
   Bell,
   Plus,
-  Globe,
   Menu,
-  Building2,
   UserCog,
   Moon,
   Sun,
@@ -21,9 +19,6 @@ export const Header: React.FC = () => {
   const {
     toggleMobileSidebar,
     toggleNotificationDrawer,
-    selectedCompany,
-    companies,
-    setCompany,
   } = useAppStore();
 
   const { theme, toggleTheme } = useThemeStore();
@@ -80,31 +75,6 @@ export const Header: React.FC = () => {
 
         {/* Right: Tools & Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Network Status */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/30">
-            <Globe size={13} />
-            <span>Rede N1 & SADC</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
-          </div>
-
-          {/* Company Switcher */}
-          <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
-            <Building2 size={13} className="text-slate-500" />
-            <select
-              value={selectedCompany}
-              onChange={(e) => setCompany(e.target.value)}
-              className="bg-transparent text-slate-700 dark:text-slate-300 text-xs font-medium focus:outline-none cursor-pointer appearance-none pr-3"
-            >
-              {companies.map((c) => (
-                <option key={c} value={c} className="bg-white dark:bg-navy-800 text-slate-900 dark:text-white">
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="w-px h-4 bg-slate-200 dark:bg-slate-800 hidden sm:block mx-1" />
-
           {/* Search Trigger for Mobile */}
           <button
             onClick={() => setIsGlobalSearchOpen(true)}

@@ -5,7 +5,6 @@ interface PageHeaderProps {
   title: string;
   companyName?: string;
   description: string;
-  badgeText?: string;
   icon?: React.ElementType;
   actions?: React.ReactNode;
 }
@@ -14,7 +13,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   companyName,
   description,
-  badgeText,
   icon: Icon,
   actions,
 }) => {
@@ -50,24 +48,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           </div>
         </div>
 
-        {/* Bottom Bar: Badge + Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 w-full max-w-full">
-          {/* Badge */}
-          <div className="max-w-full overflow-hidden">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider shadow-2xs max-w-full truncate">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-              <span className="truncate">{badgeText || 'PAINEL PRINCIPAL • DASHBOARD ERP'}</span>
-            </span>
+        {/* Bottom Bar: Actions */}
+        {actions && (
+          <div className="flex flex-wrap items-center justify-end gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 w-full max-w-full">
+            {actions}
           </div>
-
-          {/* Actions */}
-          {actions && (
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 min-w-0 max-w-full">
-              {actions}
-            </div>
-          )}
-
-        </div>
+        )}
       </div>
     </div>
   );

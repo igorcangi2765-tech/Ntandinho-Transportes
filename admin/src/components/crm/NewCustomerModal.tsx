@@ -47,7 +47,7 @@ export const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ onClose, onS
         ...data,
         address: 'Matola / Maputo',
         city: 'Maputo',
-        creditLimitMzn: data.isCorporate ? 5000000 : 200000,
+        creditLimitMzn: data.isCorporate ? 1500000 : 200000,
       });
       onSuccess();
       onClose();
@@ -74,7 +74,7 @@ export const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ onClose, onS
           </div>
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">Registar Novo Cliente</h2>
-            <p className="text-xs text-slate-400">Adicionar empresa ou cliente individual ao CRM.</p>
+            <p className="text-xs text-slate-400">Adicionar empresa ou cliente individual ao cadastro ERP.</p>
           </div>
         </div>
 

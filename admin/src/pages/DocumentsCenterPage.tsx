@@ -104,8 +104,8 @@ export const DocumentsCenterPage: React.FC = () => {
 
   return (
     <StandardPageLayout
-      title="Central de Documentos & Controlo de Expirações"
-      description="Gestão de Alvarás, Seguros de Frota, Inspecções, Licenciamentos e Vistos SADC."
+      title="Documentos & Expirações"
+      description="Registo e controlo de caducidade de documentos da frota e empresa."
       icon={FolderLock}
       actions={
         <div className="flex items-center gap-2">

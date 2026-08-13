@@ -1,16 +1,16 @@
 import { InvoiceItem, QuotationItem, PaymentItem, CompanyProfile } from '../shared/stores/useErpStore';
 
 const DEFAULT_COMPANY: Partial<CompanyProfile> = {
-  nomeComercial: "N' Tandinho",
-  nomeJuridico: "Transportes e Logística N' Tandinho Lda",
-  nuit: "400123987",
-  address: "Av. Eduardo Mondlane, Edifício Central",
-  city: "Nampula",
-  province: "Nampula",
+  nomeComercial: "Transportes N' Tandinho",
+  nomeJuridico: "Transportes N' Tandinho S.A.",
+  nuit: "400192834",
+  address: "Bairro do Triângulo, Parcela 1452, Matola",
+  city: "Maputo",
+  province: "Maputo",
   country: "Moçambique",
-  phones: ["+258 84 000 0000", "+258 82 000 0000"],
-  emails: ["comercial@ntandinho.co.mz", "geral@ntandinho.co.mz"],
-  website: "https://ntandinho.zyphtech.com",
+  phones: ["+258 84 311 5811", "+258 82 311 5811"],
+  emails: ["contacto@ntandinho.co.mz"],
+  website: "https://ntandinho.co.mz",
   bankAccountDetails: "BCI: 00080000123456789 (IBAN MZ59) • BIM: 00010000987654321",
 };
 
@@ -409,7 +409,7 @@ function openPrintWindow(title: string, contentHtml: string) {
               </svg>
             </div>
             <div>
-              <div class="brand-title">N' Tandinho</div>
+              <div class="brand-title">Transportes N' Tandinho</div>
               <div class="brand-sub"><strong>${DEFAULT_COMPANY.nomeJuridico}</strong> • NUIT: ${DEFAULT_COMPANY.nuit}</div>
               <div class="brand-sub">${DEFAULT_COMPANY.address}, ${DEFAULT_COMPANY.city}, Moçambique</div>
             </div>
@@ -424,10 +424,10 @@ function openPrintWindow(title: string, contentHtml: string) {
         ${contentHtml}
 
         <div class="doc-footer">
-          <strong>${DEFAULT_COMPANY.nomeJuridico}</strong> — Transporte Seguro, Eficiente e Confiável.<br>
-          Sede: Av. Eduardo Mondlane, Edifício Central, Nampula, Moçambique • NUIT: ${DEFAULT_COMPANY.nuit}<br>
+          <strong>${DEFAULT_COMPANY.nomeJuridico}</strong> — Transporte e Logística em Moçambique.<br>
+          Sede: ${DEFAULT_COMPANY.address}, ${DEFAULT_COMPANY.city}, Moçambique • NUIT: ${DEFAULT_COMPANY.nuit}<br>
           Contactos: ${DEFAULT_COMPANY.phones?.join(' | ')} • Email: ${DEFAULT_COMPANY.emails?.join(' | ')} • Web: ${DEFAULT_COMPANY.website}<br>
-          <em style="font-size:8.5px; color:#94A3B8;">Processado por Computador / Backoffice ERP N'Tandinho Transportes S.A.</em>
+          <em style="font-size:8.5px; color:#94A3B8;">Processado por Computador / N' Tandinho ERP</em>
         </div>
       </div>
     </body>

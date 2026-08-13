@@ -112,11 +112,7 @@ export const OperationsPage: React.FC = () => {
     setIsAddBookingOpen(false);
   };
 
-  // Computations
-  const totalTrips = trips.length;
-  const inTransitTrips = trips.filter((t) => t.status === 'EM_ANDAMENTO').length;
-  const confirmedTrips = trips.filter((t) => t.status === 'CONFIRMADA' || t.status === 'EM_PREPARACAO').length;
-  const newBookings = bookings.filter((b) => b.status === 'NOVA' || b.status === 'PENDENTE').length;
+
 
   // Columns for Viagens
   const tripColumns: Column<TripItem>[] = [
@@ -252,8 +248,8 @@ export const OperationsPage: React.FC = () => {
 
   return (
     <StandardPageLayout
-      title="Gestão Operacional, Viagens & Cotações"
-      description="Pipeline inteligente de transporte: Cotação ➔ Reserva ➔ Viagem com alocação técnica de frota."
+      title="Gestão Operacional"
+      description="Controlo de viagens, reservas de transporte e agenda da frota."
       icon={Truck}
       actions={
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -325,48 +321,77 @@ export const OperationsPage: React.FC = () => {
         </div>
     }
       kpiCards={
-        <>
-          <MetricCard
-            title="Total Viagens"
-            value={totalTrips}
-            subtext="Operação global em curso"
-            icon={Truck}
-            iconBg="bg-slate-100"
-            iconColor="text-slate-900"
-          />
-          <MetricCard
-            title="Em Trânsito"
-            value={inTransitTrips}
-            subtext="Camiões na estrada SADC"
-            icon={Clock}
-            iconBg="bg-sky-50"
-            iconColor="text-sky-600"
-          />
-          <MetricCard
-            title="Confirmadas"
-            value={confirmedTrips}
-            subtext="Prontas para partida"
-            icon={CheckCircle2}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-600"
-          />
-          <MetricCard
-            title="Reservas Pendentes"
-            value={newBookings}
-            subtext="Necessita de confirmação"
-            icon={CalendarCheck}
-            iconBg="bg-purple-50"
-            iconColor="text-purple-600"
-          />
-          <MetricCard
-            title="Total de Reservas"
-            value={bookings.length}
-            subtext="Operações agendadas"
-            icon={CalendarCheck}
-            iconBg="bg-amber-50"
-            iconColor="text-amber-600"
-          />
-        </>
+        activeTab === 'trips' ? (
+          <>
+            <MetricCard
+              title="Total Viagens"
+              value={trips.length}
+              subtext="Operações registadas"
+              icon={Truck}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Em Trânsito"
+              value={trips.filter((t) => t.status === 'EM_ANDAMENTO').length}
+              subtext="Camiões na estrada"
+              icon={Clock}
+              iconBg="bg-sky-50 dark:bg-sky-900/30"
+              iconColor="text-sky-600 dark:text-sky-400"
+            />
+            <MetricCard
+              title="Confirmadas"
+              value={trips.filter((t) => t.status === 'CONFIRMADA' || t.status === 'EM_PREPARACAO').length}
+              subtext="Prontas para partida"
+              icon={CheckCircle2}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+            <MetricCard
+              title="Concluídas"
+              value={trips.filter((t) => t.status === 'CONCLUIDA').length}
+              subtext="Entregas efetuadas"
+              icon={CheckCircle2}
+              iconBg="bg-indigo-50 dark:bg-indigo-900/30"
+              iconColor="text-indigo-600 dark:text-indigo-400"
+            />
+          </>
+        ) : activeTab === 'bookings' ? (
+          <>
+            <MetricCard
+              title="Total Reservas"
+              value={bookings.length}
+              subtext="Solicitações recebidas"
+              icon={CalendarCheck}
+              iconBg="bg-slate-100 dark:bg-slate-800"
+              iconColor="text-slate-900 dark:text-white"
+            />
+            <MetricCard
+              title="Novas / Pendentes"
+              value={bookings.filter((b) => b.status === 'NOVA' || b.status === 'PENDENTE').length}
+              subtext="Aguardam confirmação"
+              icon={Clock}
+              iconBg="bg-amber-50 dark:bg-amber-900/30"
+              iconColor="text-amber-600 dark:text-amber-400"
+            />
+            <MetricCard
+              title="Confirmadas"
+              value={bookings.filter((b) => b.status === 'CONFIRMADA').length}
+              subtext="Aprovadas para despacho"
+              icon={CheckCircle2}
+              iconBg="bg-emerald-50 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+            />
+            <MetricCard
+              title="Canceladas"
+              value={bookings.filter((b) => b.status === 'CANCELADA').length}
+              subtext="Pedidos anulados"
+              icon={CalendarCheck}
+              iconBg="bg-rose-50 dark:bg-rose-900/30"
+              iconColor="text-rose-600 dark:text-rose-400"
+            />
+          </>
+        ) : undefined
       }
     >
       {/* TAB 1: VIAGENS */}

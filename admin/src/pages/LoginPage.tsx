@@ -84,31 +84,31 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617] text-slate-100 p-4 sm:p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen flex items-center justify-center bg-background text-text-primary p-4 sm:p-6 relative overflow-hidden font-sans">
       {/* Background Ambient Glows */}
       <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-brand-orange/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-[#0f172a]/40 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-md w-full relative z-10 space-y-6">
         {/* Official Brand Header */}
         <div className="flex flex-col items-center justify-center text-center space-y-3">
           <Logo size="lg" showSubtitle={true} className="flex-col text-center" />
-          <h1 className="text-xl font-bold text-white tracking-tight pt-2">Bem-vindo de volta</h1>
-          <p className="text-xs text-slate-400">
-            Inicie sessão para aceder ao ERP da N' Tandinho Transportes.
+          <h1 className="text-2xl font-bold text-text-primary tracking-tight pt-2">Bem-vindo de volta</h1>
+          <p className="text-sm text-text-muted">
+            Inicie sessão para aceder ao N' Tandinho ERP.
           </p>
         </div>
 
         {/* Login Form Card */}
-        <div className="rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-800/80 bg-[#0f172a]/90 backdrop-blur-xl space-y-6">
-          <div className="flex items-center space-x-2 text-xs text-brand-orange font-semibold uppercase tracking-wider">
-            <ShieldCheck size={16} />
+        <div className="rounded-2xl p-6 sm:p-8 shadow-2xl border border-border bg-surface/95 backdrop-blur-xl space-y-6">
+          <div className="flex items-center space-x-2 text-xs text-brand-orange font-bold uppercase tracking-wider">
+            <ShieldCheck size={18} />
             <span>Acesso Seguro ERP</span>
           </div>
 
           {serverError && (
-            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-start space-x-3 animate-in fade-in duration-200">
-              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-sm flex items-start space-x-3 animate-in fade-in duration-200">
+              <AlertCircle size={18} className="shrink-0 mt-0.5" />
               <span>{serverError}</span>
             </div>
           )}
@@ -116,78 +116,83 @@ export const LoginPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-5" onKeyDown={handleKeyDown}>
             {/* Email Input */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-sm font-semibold text-text-secondary mb-1.5" htmlFor="email">
                 E-mail
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-3 text-slate-500" />
+                <Mail size={18} className="absolute left-3.5 top-2.5 text-text-muted" />
                 <input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nome@ntandinho.co.mz"
-                  className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-950 text-slate-100 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-orange/60 focus:ring-1 focus:ring-brand-orange/40 transition-all placeholder:text-slate-600"
+                  autoComplete="email"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-background text-text-primary rounded-xl border border-border focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all placeholder:text-text-muted"
                 />
               </div>
               {errors.email && (
-                <p className="text-[11px] text-rose-400 mt-1">{errors.email}</p>
+                <p className="text-xs text-rose-500 mt-1">{errors.email}</p>
               )}
             </div>
 
             {/* Password Input */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-semibold text-slate-300">
+                <label className="block text-sm font-semibold text-text-secondary" htmlFor="password">
                   Palavra-passe
                 </label>
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-xs text-brand-orange hover:underline font-medium"
+                  className="text-xs text-brand-orange hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange rounded"
                 >
                   Esqueci a palavra-passe
                 </button>
               </div>
 
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-3 text-slate-500" />
+                <Lock size={18} className="absolute left-3.5 top-2.5 text-text-muted" />
                 <input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-950 text-slate-100 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-orange/60 focus:ring-1 focus:ring-brand-orange/40 transition-all placeholder:text-slate-600"
+                  autoComplete="current-password"
+                  className="w-full pl-10 pr-10 py-2.5 text-sm bg-background text-text-primary rounded-xl border border-border focus:outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange transition-all placeholder:text-text-muted"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                  aria-label={showPassword ? "Ocultar palavra-passe" : "Mostrar palavra-passe"}
+                  className="absolute right-3.5 top-2.5 text-text-muted hover:text-text-primary transition-colors focus:outline-none"
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
               {capsLockActive && (
-                <p className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
-                  <AlertCircle size={12} /> Caps Lock ativado
+                <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+                  <AlertCircle size={14} /> Caps Lock ativado
                 </p>
               )}
 
               {errors.password && (
-                <p className="text-[11px] text-rose-400 mt-1">{errors.password}</p>
+                <p className="text-xs text-rose-500 mt-1">{errors.password}</p>
               )}
             </div>
 
             {/* Controls: Remember Me */}
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <label className="flex items-center space-x-2 cursor-pointer">
+            <div className="flex items-center justify-between text-sm text-text-secondary">
+              <label className="flex items-center space-x-2 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded bg-slate-950 border-slate-800 text-brand-orange focus:ring-brand-orange/40"
+                  className="rounded bg-background border-border text-brand-orange focus:ring-brand-orange/40 h-4 w-4 cursor-pointer"
                 />
-                <span>Manter sessão iniciada</span>
+                <span className="group-hover:text-text-primary transition-colors">Manter sessão iniciada</span>
               </label>
             </div>
 
@@ -195,12 +200,12 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-brand-orange hover:bg-brand-orange-hover text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 shadow-glow"
+              className="w-full py-3 bg-brand-orange hover:bg-orange-500 text-slate-950 font-bold text-sm rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange focus:ring-offset-background"
             >
               {loading ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" />
-                  <span>A entrar...</span>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>A autenticar...</span>
                 </>
               ) : (
                 <span>Entrar no ERP</span>

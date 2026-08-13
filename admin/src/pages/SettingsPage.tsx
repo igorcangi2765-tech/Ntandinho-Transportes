@@ -211,8 +211,8 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <StandardPageLayout
-      title="Administração Geral & Definições do Sistema"
-      description="Configuração oficial da N' Tandinho S.A., gestão de utilizadores ERP e permissões de acesso RBAC."
+      title="Configurações do Sistema"
+      description="Gestão dos dados da empresa, utilizadores, permissões e parâmetros."
       icon={ShieldCheck}
       actions={
         <div className="flex items-center gap-2">

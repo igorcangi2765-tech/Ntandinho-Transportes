@@ -7,6 +7,7 @@ import { FileBarChart, Printer, Filter, TrendingUp, Truck, Users } from 'lucide-
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 import { printGeneralReport } from '../utils/documentPrinter';
+import { formatCurrencyMzn } from '../utils/formatters';
 
 type PeriodFilter = 'hoje' | 'semana' | 'mes' | 'ano';
 
@@ -135,9 +136,7 @@ export const ReportsPage: React.FC = () => {
   const hasChartData = chartData.some((d) => d.viagens > 0 || d.concluidas > 0);
 
   const formatMzn = (val: number) => {
-    if (val >= 1000000) return `${(val / 1000000).toFixed(2)}M`;
-    if (val >= 1000) return `${(val / 1000).toFixed(0)}k`;
-    return val.toLocaleString('pt-MZ');
+    return formatCurrencyMzn(val);
   };
 
   return (

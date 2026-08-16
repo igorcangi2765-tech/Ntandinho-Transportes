@@ -91,11 +91,11 @@ export const LoginPage: React.FC = () => {
 
       <div className="max-w-md w-full relative z-10 space-y-6">
         {/* Official Brand Header */}
-        <div className="flex flex-col items-center justify-center text-center space-y-3">
-          <Logo size="lg" showSubtitle={true} className="flex-col text-center" />
-          <h1 className="text-2xl font-bold text-text-primary tracking-tight pt-2">Bem-vindo de volta</h1>
+        <div className="flex flex-col items-center justify-center text-center space-y-2">
+          <Logo size="lg" />
+          <h1 className="text-2xl font-bold text-text-primary tracking-tight pt-3">Bem-vindo de volta</h1>
           <p className="text-sm text-text-muted">
-            Inicie sessão para aceder ao N' Tandinho ERP.
+            Inicie sessão para aceder ao N’Tandinho ERP.
           </p>
         </div>
 

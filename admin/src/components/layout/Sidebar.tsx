@@ -194,17 +194,17 @@ export const Sidebar: React.FC = () => {
               }}
               title={isCollapsed ? "N' Tandinho ERP" : undefined}
             >
-              {/* Logo Emblem */}
+              {/* Logo Emblem (Camião Transportes) */}
               <div className="w-10 h-10 rounded-xl bg-[#F6A823] flex items-center justify-center font-black text-[#0B132B] text-xl shadow-md shrink-0 ring-2 ring-[#F6A823]/20">
                 <Truck size={20} className="text-[#0B132B]" strokeWidth={2.5} />
               </div>
 
               {!isCollapsed && (
-                <div className="flex flex-col truncate">
-                  <span className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white font-display truncate">
-                    N' Tandinho
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white font-display whitespace-nowrap">
+                    N’Tandinho
                   </span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#F6A823]">
+                  <span className="px-1.5 py-0.5 rounded-md bg-[#F6A823]/15 text-[#F6A823] border border-[#F6A823]/30 font-black text-[10px] tracking-wider uppercase">
                     ERP
                   </span>
                 </div>

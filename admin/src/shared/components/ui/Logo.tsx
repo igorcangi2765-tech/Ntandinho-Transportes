@@ -13,39 +13,35 @@ export const Logo: React.FC<LogoProps> = ({
   collapsed = false,
   size = 'md',
   className,
-  showSubtitle = true,
 }) => {
-  const iconSizes = {
-    sm: 'w-7 h-7 text-xs',
-    md: 'w-9 h-9 text-sm',
-    lg: 'w-11 h-11 text-base',
+  const iconConfig = {
+    sm: { box: 'w-7 h-7 rounded-lg', icon: 'w-4 h-4', text: 'text-sm' },
+    md: { box: 'w-9 h-9 rounded-xl', icon: 'w-5 h-5', text: 'text-base font-extrabold' },
+    lg: { box: 'w-11 h-11 rounded-xl', icon: 'w-6 h-6', text: 'text-xl font-black' },
   };
 
+  const current = iconConfig[size] || iconConfig.md;
+
   return (
-    <div className={cn('flex items-center gap-3 select-none cursor-pointer', className)}>
-      {/* Official Brand Emblem */}
+    <div className={cn('inline-flex items-center gap-2.5 sm:gap-3 select-none cursor-pointer group', className)}>
+      {/* Official Brand Emblem (Truck Transpontes) */}
       <div
         className={cn(
-          'rounded-xl bg-[#F6A823] flex items-center justify-center font-black text-[#0B132B] shadow-sm shrink-0 relative overflow-hidden',
-          iconSizes[size]
+          'bg-[#F6A823] flex items-center justify-center text-[#0B132B] shadow-sm shrink-0 relative overflow-hidden transition-transform duration-200 group-hover:scale-105',
+          current.box
         )}
+        title="Transportes N'Tandinho"
       >
-        <Truck className="w-5 h-5 text-[#0B132B]" strokeWidth={2.5} />
+        <Truck className={cn('text-[#0B132B]', current.icon)} strokeWidth={2.5} />
       </div>
 
       {/* Brand Logotype Text */}
       {!collapsed && (
-        <div className="flex flex-col truncate text-left">
-          <span className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white font-display truncate">
-            N' Tandinho
-          </span>
-          {showSubtitle && (
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#F6A823] truncate">
-              ERP
-            </span>
-          )}
-        </div>
+        <span className={cn('tracking-tight text-slate-900 dark:text-white font-display whitespace-nowrap', current.text)}>
+          N’Tandinho
+        </span>
       )}
     </div>
   );
 };
+
